@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:18
+    container_name: ${POSTGRES_DB}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      # maps the local SQL file to initialization folder
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # data stays saved when stopping the container
+      - postgres_data:/var/lib/postgresql
+  app:
+    build: .
+    container_name: tweb_app
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_PORT: 5432
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
