@@ -3,6 +3,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 COPY src ./src
+COPY static ./static
 
 # entrypoint script loads env and runs npm start
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
