@@ -232,6 +232,80 @@ body {
   height: 100%;
 }
 
+.bird-view {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+  color: var(--color-text);
+  margin-bottom: var(--space-lg);
+}
+
+.bird-body-wrap {
+  padding: var(--space-md);
+}
+
+/* bird-info card */
+.bird-info {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: repeat(5, 1fr);
+  border-bottom: var(--space-xs) solid var(--color-border);
+}
+
+/* Title area: common name + scientific name */
+.bird-info .bird-title {
+  grid-column: 1 / 4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin: calc(var(--space-md) + 0.25rem);
+}
+
+.bird-info .common-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.bird-info .scientific-name {
+  font-size: 0.95rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.bird-meta-group {
+  display: flex;
+  justify-content: start;
+  column-gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.bird-meta-wrapper {
+  border-left: var(--space-xs) solid var(--color-border);
+  width: 100%;
+  grid-column: 4 / 6;
+}
+
+.bird-info .bird-meta {
+  margin: calc(var(--space-md) + 0.25rem);
+}
+
+.bird-info .bird-meta dt {
+  list-style: none;
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.bird-info .bird-meta dd {
+  margin: 0;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
 @media (max-width: 900px) {
   .grid {
     gap: var(--space-sm);
@@ -256,7 +330,7 @@ body {
 }
 
 /* small screens: stack content for readability */
-@media (max-width: 500px) {
+@media (max-width: 560px) {
 
   .bird-img1,
   .bird-img2,
@@ -276,5 +350,15 @@ body {
   .bird-img3 img,
   .bird-img4 img {
     max-height: 360px;
+  }
+
+  .bird-info .bird-title {
+    grid-column: 1 / -1;
+  }
+
+  .bird-meta-wrapper {
+    border-left: none;
+    border-top: var(--space-xs) solid var(--color-border);
+    grid-column: 1 / -1;
   }
 }

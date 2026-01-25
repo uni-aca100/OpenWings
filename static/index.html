@@ -23,20 +23,34 @@
 
   <!-- main contain a view one the bird searched/default -->
   <div class="wrap-content container">
-    <main>
+    <main class="bird-view">
       <div class="bird-info" id="js-bird-info">
-        <div class="">
-          <h1 id="js-bird-common-name">bird common name</h1>
-          <p id="js-bird-scientific-name">bird scientific name</p>
+        <div class="bird-title">
+          <h1 class="common-name" id="js-common-name">Northern Pintail</h1>
+          <div class="scientific-name" id="js-scientific-name"><em>Anas acuta</em></div>
         </div>
-        <div class="">
-          <p id="js-bird-family">family</p>
-          <p id="js-bird-order">order</p>
-          <p id="js-bird-diet">diet</p>
-          <p id="js-bird-status">conservation status</p>
+        <div class="bird-meta-wrapper">
+          <dl class="bird-meta" aria-labelledby="js-common-name">
+            <div class="bird-meta-group">
+              <dt>Family:</dt>
+              <dd id="js-family">Anatidae</dd>
+            </div>
+            <div class="bird-meta-group">
+              <dt>Order:</dt>
+              <dd id="js-order">Anseriformes</dd>
+            </div>
+            <div class="bird-meta-group">
+              <dt>Diet:</dt>
+              <dd id="js-diet">Omnivore — seeds, aquatic invertebrates</dd>
+            </div>
+            <div class="bird-meta-group">
+              <dt>Conservation:</dt>
+              <dd id="js-conservation">Least Concern</dd>
+            </div>
+          </dl>
         </div>
       </div>
-      <div class="grid">
+      <div class="grid bird-body-wrap">
         <div class="bird-img1">
           <img src="https://birdlifedata.blob.core.windows.net/species-images/22708822.jpg" alt="Bird 1">
         </div>
