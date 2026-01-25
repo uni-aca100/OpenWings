@@ -4,55 +4,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>openWings</title>
+  <link rel="stylesheet" href="/static/utils.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <style>
-    #map {
-      height: 400px;
-    }
-  </style>
 </head>
 
 <body>
-  <div id="map"></div>
-</body>
 
-<script>
-  var map = L.map('map').setView([51.505, -0.09], 13);
+  <header class="navbar">
+    <div class="container flex items-center justify-between">
+      <div class="brand text-lg"><a href="/" class="brand-link">Open Wings</a></div>
+      <div><button id="login-btn" class="btn btn-primary">Login</button></div>
+    </div>
+  </header>
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-  }).addTo(map);
+  <main>
+    <div id="map"></div>
+  </main>
 
-  var circle = L.circle([51.508, -0.11], {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-    radius: 500
-  }).addTo(map);
+  <script>
+    var map = L.map('map').setView([51.505, -0.09], 13);
 
-  function getBirdStyle(feature) {
-    switch (feature.properties.season) {
-      case 'resident': return { color: "#800080", fillColor: "#800080", fillOpacity: 0.5 }; // Purple
-      case 'breeding': return { color: "#FF0000", fillColor: "#FF0000", fillOpacity: 0.5 }; // Red
-      case 'postbreeding_migration': return { color: "#0000FF", fillColor: "#0000FF", fillOpacity: 0.5 }; // Blue
-      case 'prebreeding_migration': return { color: "#FFFF00", fillColor: "#FFFF00", fillOpacity: 0.5 }; // Yellow
-      default: return { color: "#cccccc", fillOpacity: 0.2 };                       // Missing
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    var circle = L.circle([51.508, -0.11], {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.5,
+      radius: 500
+    }).addTo(map);
+
+    function getBirdStyle(feature) {
+      switch (feature.properties.season) {
+        case 'resident': return { color: "#800080", fillColor: "#800080", fillOpacity: 0.5 }; // Purple
+        case 'breeding': return { color: "#FF0000", fillColor: "#FF0000", fillOpacity: 0.5 }; // Red
+        case 'postbreeding_migration': return { color: "#0000FF", fillColor: "#0000FF", fillOpacity: 0.5 }; // Blue
+        case 'prebreeding_migration': return { color: "#FFFF00", fillColor: "#FFFF00", fillOpacity: 0.5 }; // Yellow
+        default: return { color: "#cccccc", fillOpacity: 0.2 };                       // Missing
+      }
     }
-  }
 
-  // add geojson data
-  fetch('/api/species/geojson')
-    .then(response => response.json())
-    .then(data => {
-      L.geoJSON(data, {
-        style: getBirdStyle
-      }).addTo(map);
-    });
-</script>
+    // add geojson data
+    fetch('/api/species/geojson')
+      .then(response => response.json())
+      .then(data => {
+        L.geoJSON(data, {
+          style: getBirdStyle
+        }).addTo(map);
+      });
+  </script>
+</body>
 
 </html>
