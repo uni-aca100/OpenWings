@@ -43,8 +43,7 @@ CREATE TABLE media (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   species_scientific_name TEXT REFERENCES species(scientific_name),
   media_type TEXT CHECK (media_type IN ('image', 'video', 'audio')),
-  url TEXT NOT NULL,
-  description TEXT,
+  url TEXT NOT NULL, -- link is relative to to the root project path
   license TEXT,
   contributor TEXT
 );

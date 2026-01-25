@@ -21,23 +21,46 @@
     </div>
   </header>
 
-  <main>
-    <div id="map"></div>
-  </main>
+  <!-- main contain a view one the bird searched/default -->
+  <div class="wrap-content container">
+    <main>
+      <div class="bird-info" id="js-bird-info">
+        <div class="">
+          <h1 id="js-bird-common-name">bird common name</h1>
+          <p id="js-bird-scientific-name">bird scientific name</p>
+        </div>
+        <div class="">
+          <p id="js-bird-family">family</p>
+          <p id="js-bird-order">order</p>
+          <p id="js-bird-diet">diet</p>
+          <p id="js-bird-status">conservation status</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="bird-img1">
+          <img src="https://birdlifedata.blob.core.windows.net/species-images/22708822.jpg" alt="Bird 1">
+        </div>
+        <div class="bird-img2">
+          <img src="https://birdlifedata.blob.core.windows.net/species-images/22708822.jpg" alt="Bird 2">
+        </div>
+        <div class="bird-img3">
+          <img src="https://birdlifedata.blob.core.windows.net/species-images/22708822.jpg" alt="Bird 3">
+        </div>
+        <div class="bird-img4">
+          <img src="https://birdlifedata.blob.core.windows.net/species-images/22708822.jpg" alt="Bird 4">
+        </div>
+        <div id="map" class="bird-map"></div>
+      </div>
+
+    </main>
+  </div>
 
   <script>
-    var map = L.map('map').setView([51.505, -0.09], 13);
+    var map = L.map('map').setView([51.505, -0.09], 4);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
-
-    var circle = L.circle([51.508, -0.11], {
-      color: 'red',
-      fillColor: '#f03',
-      fillOpacity: 0.5,
-      radius: 500
     }).addTo(map);
 
     function getBirdStyle(feature) {
@@ -51,7 +74,9 @@
     }
 
     // add geojson data
-    fetch('/api/species/geojson')
+    fetch('/api/species/geojson?speciesName=Anas+acuta&season=breeding', {
+      method: 'GET'
+    })
       .then(response => response.json())
       .then(data => {
         L.geoJSON(data, {

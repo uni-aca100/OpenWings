@@ -16,9 +16,11 @@ const server = http.createServer(async (req, res) => {
     // Route to serve static files
     serveStaticFile(req, res);
   } else if (method === 'GET' && url === '/api/species') {
-    await handleAPISpecies(req, res);
+    handleAPISpecies(req, res);
   } else if (method === 'GET' && url.startsWith('/api/species/geojson')) {
-    await handleAPISpeciesGeoJSON(req, res);
+    handleAPISpeciesGeoJSON(req, res);
+  } else if (method === 'GET' && url.startsWith('/api/species/media')) {
+    handleAPISpeciesMedia(req, res);
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not Found' }));
@@ -49,7 +51,6 @@ function serveStaticFileFromPath(filePath, res) {
       return;
     }
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, ContentType(ext));
     // set basic security headers
     // prevent MIME type sniffing, prevent the browser from guessing the content type
     // protect against security risks like Cross-Site Scripting (XSS) attacks
@@ -58,39 +59,64 @@ function serveStaticFileFromPath(filePath, res) {
     res.setHeader('X-Frame-Options', 'DENY');
     // (optional) we are not serving static files with sensitive info for now
     // res.setHeader('Referrer-Policy', 'no-referrer');
+    res.writeHead(200, ContentType(ext));
     res.end(data);
   });
 }
 
-// route to handle API requests for species data
-async function handleAPISpecies(req, res) {
-  try {
-    const result = await db.query('SELECT * FROM species');
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(result.rows));
-  } catch (err) {
-    console.error('Database query error:', err);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Database query failed' }));
-  }
+// route to handle API requests for species GeoJSON data
+function handleAPISpeciesGeoJSON(req, res) {
+  // get the species name and season from the query parameters
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const speciesName = url.searchParams.get('speciesName');
+  const season = url.searchParams.get('season');
+
+  handleAPIQuery(res, async () => {
+    return await db.queryGeoJSONSpecies(speciesName, season);
+  });
 }
 
-// route to handle API requests for species GeoJSON data
-async function handleAPISpeciesGeoJSON(req, res) {
+// route to handle API requests for species media data
+function handleAPISpeciesMedia(req, res) {
+  // get the species from the query parameters
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const speciesName = url.searchParams.get('speciesName');
+
+  handleAPIQuery(res, async () => {
+    return await db.querySpeciesMedia(speciesName);
+  });
+}
+
+// route to handle API requests for species data
+function handleAPISpecies(req, res) {
+  // get the species name from the query parameters
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const speciesName = url.searchParams.get('speciesName');
+
+  handleAPIQuery(res, async () => {
+    return await db.querySpecies(speciesName);
+  });
+}
+
+// generic function to handle API queries and send JSON responses
+async function handleAPIQuery(res, asyncQueryJsonFn) {
   try {
-    const geojsonFeatures = await db.queryGeoJSONSpecies('Anas acuta'); // example species
-    if (geojsonFeatures.length > 0) {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(geojsonFeatures));
+    const data = await asyncQueryJsonFn();
+    if (data.length > 0) {
+      sendJSONResponse(res, 200, data);
     } else {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Species not found' }));
+      sendJSONResponse(res, 404, { error: 'No data found' });
     }
   } catch (err) {
     console.error('Database query error:', err);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Database query failed' }));
+    sendJSONResponse(res, 500, { error: 'Database query failed' });
   }
+}
+
+// Api json response content, reduce code duplication
+function sendJSONResponse(res, statusCode, data) {
+  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
 }
 
 // Utility function to get content type based on file extension
