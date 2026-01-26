@@ -13,15 +13,23 @@ module.exports = {
   query: (sql, params) => pool.query(sql, params),
   queryGeoJSONSpecies,
   querySpeciesMedia,
+  querySpecies,
 };
 
+// get species range as GeoJSON features array, filtered by scientific name (or common name) and season
 async function queryGeoJSONSpecies(scientificName, season) {
+  if (!scientificName || !season) {
+    console.error('Both scientificName and season parameters are required');
+    return [];  // Return an empty array if parameters are missing
+  }
+
   const sql = `
     SELECT ST_AsGeoJSON(geom) AS geojson, species_scientific_name, season
     FROM species_range
-    WHERE species_scientific_name = $1 AND season = $2
+    JOIN species s ON species_scientific_name = s.scientific_name
+    WHERE (LOWER(species_scientific_name) LIKE $1 OR LOWER(s.common_name) LIKE $1) AND LOWER(season) = $2
   `;
-  const result = await pool.query(sql, [scientificName, season]);
+  const result = await pool.query(sql, [`%${scientificName.toLowerCase()}%`, season.toLowerCase()]);
 
   // Convert each row to a GeoJSON Feature
   return result.rows.map(row => ({
@@ -36,12 +44,17 @@ async function queryGeoJSONSpecies(scientificName, season) {
 
 // get media information related to a species as a JSON array
 async function querySpeciesMedia(speciesId) {
+  if (!speciesId) {
+    console.error('speciesId parameter is required');
+    return [];
+  }
+
   const sql = `
     SELECT url, media_type, license, contributor
     FROM media
-    WHERE species_scientific_name = $1
+    WHERE LOWER(species_scientific_name) LIKE $1
   `;
-  const result = await pool.query(sql, [speciesId]);
+  const result = await pool.query(sql, [`%${speciesId.toLowerCase()}%`]);
   // convert to json array
   return result.rows.map(row => ({
     // generate a complete URL for the media,
@@ -53,57 +66,43 @@ async function querySpeciesMedia(speciesId) {
   }));
 }
 
-/* Get species information */
+/* Get species information as object by scientific or common name */
 async function querySpecies(speciesId) {
+  if (!speciesId) {
+    console.error('speciesId parameter is required');
+    return null;
+  }
   const sql = `
     SELECT * FROM species
-    WHERE scientific_name = $1
+    WHERE  LOWER(scientific_name) LIKE $1 or LOWER(common_name) LIKE $1
   `;
-  const result = await pool.query(sql, [speciesId]);
-  // convert to json
-  return result.rows[0].map(row => ({
+  const result = await pool.query(sql, [`%${speciesId.toLowerCase()}%`]);
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
     scientific_name: row.scientific_name,
     common_name: row.common_name,
     family: row.family,
     order_name: row.order_name,
     diet: row.diet,
     conservation_status: row.conservation_status,
-  }));
+  };
 }
 
 
-/* table challenge, storing user-submitted challenges.
-A small amount of user can submit challenges, forming a championship.
-the goal is to spot as many species as possible within a time frame.
-*/
-/* CREATE TABLE challenge (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  start_date TIMESTAMP NOT NULL,
-  end_date TIMESTAMP NOT NULL,
-  -- additional rules about the point system used related to species spotted conservation status
-  lc_points DECIMAL(5, 2) DEFAULT 1, -- least concern
-  nt_points DECIMAL(5, 2) DEFAULT 2, -- near threatened
-  vu_points DECIMAL(5, 2) DEFAULT 5, -- vulnerable
-  en_points DECIMAL(5, 2) DEFAULT 6, -- endangered
-  cr_points DECIMAL(5, 2) DEFAULT 8  -- critically endangered
-); */
-
-/* -- association table between challenge and users many-to-many relationship
-CREATE TABLE challenge_participants (
-  challenge_id UUID REFERENCES challenge(id),
-  user_id UUID REFERENCES users(id),
-  PRIMARY KEY (challenge_id, user_id)
-); */
-
 /* get all challenges where the given user is a participant, and the challenge is active */
 async function getUserActiveChallenges(userId) {
+  if (!userId) {
+    console.error('userId parameter is required');
+    return [];
+  }
   const sql = `
     SELECT c.*
     FROM challenge c
     JOIN challenge_participants cp ON c.id = cp.challenge_id
-    WHERE cp.user_id = $1 AND c.end_date > NOW() AND c.start_date <= NOW()
+    WHERE LOWER(cp.user_id) = $1 AND c.end_date > NOW() AND c.start_date <= NOW()
   `;
-  const result = await pool.query(sql, [userId]);
+  const result = await pool.query(sql, [userId.toLowerCase()]);
   return result.rows;
 }
 

@@ -15,11 +15,14 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'GET' && url.startsWith('/static/')) {
     // Route to serve static files
     serveStaticFile(req, res);
-  } else if (method === 'GET' && url === '/api/species') {
+  } else if (method === 'POST' && url === '/api/species/info') {
+    // Route to handle API requests for species information
     handleAPISpecies(req, res);
-  } else if (method === 'GET' && url.startsWith('/api/species/geojson')) {
+  } else if (method === 'POST' && url === '/api/species/geojson') {
+    // Route to handle API requests for species GeoJSON data
     handleAPISpeciesGeoJSON(req, res);
-  } else if (method === 'GET' && url.startsWith('/api/species/media')) {
+  } else if (method === 'POST' && url === '/api/species/media') {
+    // Route to handle API requests for species media data
     handleAPISpeciesMedia(req, res);
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -64,37 +67,55 @@ function serveStaticFileFromPath(filePath, res) {
   });
 }
 
+// handle POST data conversion to JSON (presume application/json content type)
+// the handleData callback is called with the parsed JSON data
+function parsePostData(res, req, handleData) {
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+    if (body.length > 1e6) { // limit to 1MB
+      // kill connection if body is too big
+      req.destroy();
+    }
+  });
+  req.on('end', () => {
+    try {
+      const parsedData = JSON.parse(body);
+      handleData(parsedData);
+    } catch (err) {
+      console.error('Error parsing JSON:', err);
+      sendJSONResponse(res, 500, { error: 'Failed to parse JSON' });
+    }
+  });
+}
+
 // route to handle API requests for species GeoJSON data
 function handleAPISpeciesGeoJSON(req, res) {
-  // get the species name and season from the query parameters
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const speciesName = url.searchParams.get('speciesName');
-  const season = url.searchParams.get('season');
-
-  handleAPIQuery(res, async () => {
-    return await db.queryGeoJSONSpecies(speciesName, season);
+  // get the species name and season from the POST data and query the database
+  parsePostData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      return await db.queryGeoJSONSpecies(data.speciesName, data.season);
+    });
   });
 }
 
 // route to handle API requests for species media data
 function handleAPISpeciesMedia(req, res) {
-  // get the species from the query parameters
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const speciesName = url.searchParams.get('speciesName');
-
-  handleAPIQuery(res, async () => {
-    return await db.querySpeciesMedia(speciesName);
+  // get the species from the POST data and query the database
+  parsePostData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      return await db.querySpeciesMedia(data.speciesName);
+    });
   });
 }
 
 // route to handle API requests for species data
 function handleAPISpecies(req, res) {
-  // get the species name from the query parameters
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const speciesName = url.searchParams.get('speciesName');
-
-  handleAPIQuery(res, async () => {
-    return await db.querySpecies(speciesName);
+  // get the species name from the POST data and query the database
+  parsePostData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      return await db.querySpecies(data.speciesName);
+    });
   });
 }
 
@@ -102,7 +123,8 @@ function handleAPISpecies(req, res) {
 async function handleAPIQuery(res, asyncQueryJsonFn) {
   try {
     const data = await asyncQueryJsonFn();
-    if (data.length > 0) {
+    // check if data is non-empty array or non-null object
+    if ((Array.isArray(data) && data.length > 0) || (data && !Array.isArray(data))) {
       sendJSONResponse(res, 200, data);
     } else {
       sendJSONResponse(res, 404, { error: 'No data found' });

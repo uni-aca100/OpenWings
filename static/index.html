@@ -28,6 +28,19 @@
         <div class="bird-title">
           <h1 class="common-name" id="js-common-name">Northern Pintail</h1>
           <div class="scientific-name" id="js-scientific-name"><em>Anas acuta</em></div>
+
+          <!-- search bar -->
+          <form id="js-search-bar" class="search-bar" role="search" aria-label="Search birds">
+            <label for="js-search-input" class="sr-only">Search species</label>
+            <div class="search-field" role="group" aria-labelledby="js-search-input">
+              <input id="js-search-input" class="search-input" type="search" placeholder="e.g. Northern Pintail"
+                aria-describedby="js-search-help" name="q" autocomplete="off" />
+              <button id="js-search-btn" class="btn btn-search" type="submit">Search</button>
+            </div>
+            <div id="js-search-help" class="sr-only">Type a common or scientific name and press Enter or click Search
+            </div>
+          </form>
+
         </div>
         <div class="bird-meta-wrapper">
           <dl class="bird-meta" aria-labelledby="js-common-name">
@@ -41,7 +54,7 @@
             </div>
             <div class="bird-meta-group">
               <dt>Diet:</dt>
-              <dd id="js-diet">Omnivore — seeds, aquatic invertebrates</dd>
+              <dd id="js-diet">Omnivore</dd>
             </div>
             <div class="bird-meta-group">
               <dt>Conservation:</dt>
@@ -63,41 +76,15 @@
         <div class="bird-img4">
           <img src="https://birdlifedata.blob.core.windows.net/species-images/22708822.jpg" alt="Bird 4">
         </div>
-        <div id="map" class="bird-map"></div>
+        <div class="bird-map-wrapper">
+          <div id="map" class="bird-map"></div>
+        </div>
       </div>
 
     </main>
   </div>
 
-  <script>
-    var map = L.map('map').setView([51.505, -0.09], 4);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
-
-    function getBirdStyle(feature) {
-      switch (feature.properties.season) {
-        case 'resident': return { color: "#800080", fillColor: "#800080", fillOpacity: 0.5 }; // Purple
-        case 'breeding': return { color: "#FF0000", fillColor: "#FF0000", fillOpacity: 0.5 }; // Red
-        case 'postbreeding_migration': return { color: "#0000FF", fillColor: "#0000FF", fillOpacity: 0.5 }; // Blue
-        case 'prebreeding_migration': return { color: "#FFFF00", fillColor: "#FFFF00", fillOpacity: 0.5 }; // Yellow
-        default: return { color: "#cccccc", fillOpacity: 0.2 };                       // Missing
-      }
-    }
-
-    // add geojson data
-    fetch('/api/species/geojson?speciesName=Anas+acuta&season=breeding', {
-      method: 'GET'
-    })
-      .then(response => response.json())
-      .then(data => {
-        L.geoJSON(data, {
-          style: getBirdStyle
-        }).addTo(map);
-      });
-  </script>
+  <script src="/static/entry.js"></script>
 </body>
 
 </html>
