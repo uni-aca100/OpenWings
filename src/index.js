@@ -7,7 +7,7 @@ const auth = require('./auth');
 const STATIC_ROOT = path.join(__dirname, '..', 'static');
 
 const PORT = 3000;
-const protectedRoutes = ['/profile'];
+const protectedRoutes = ['/profile', `/profile/logout`];
 
 const server = http.createServer(async (req, res) => {
   const { method, url } = req;
@@ -35,6 +35,9 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'GET' && url.startsWith('/static/')) {
     // Route to serve static files
     serveStaticFile(req, res);
+  } else if (method === 'GET' && url === '/profile/logout') {
+    // Route to handle logout requests
+    handleLogout(req, res);
   } else if (method === 'POST' && url === '/register') {
     // Route to handle registration requests
     handleRegistration(req, res);
@@ -124,6 +127,20 @@ function handleLogin(req, res) {
       sendJSONResponse(res, 401, { error: 'Invalid credentials' });
     }
   });
+}
+
+// handle logout requests (GET /profile/logout)
+async function handleLogout(req, res) {
+  const success = await auth.invalidateUserSession(req);
+  if (success) {
+    // Redirect to login page after successful logout
+    res.writeHead(302, { Location: '/login', 'Set-Cookie': 'sid=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict' });
+    res.end();
+  } else {
+    // If logout failed, send error response as html
+    res.writeHead(500, { 'Content-Type': 'text/html' });
+    res.end('<h1>Logout failed</h1>');
+  }
 }
 
 // handle POST data conversion to JSON (presume application/json content type)

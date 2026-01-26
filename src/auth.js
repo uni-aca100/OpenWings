@@ -61,6 +61,25 @@ async function verifySession(sessionId) {
   return null;
 }
 
+/* Invalidate a user session id, returns bool indicating success
+   req - HTTP request object containing cookies with session ID
+ */
+async function invalidateUserSession(req) {
+  const sessionId = getSessionIdFromRequest(req);
+  if (!sessionId) {
+    return false;
+  }
+  let result;
+  try {
+    const sql = 'DELETE FROM sessions WHERE id = $1';
+    result = await db.query(sql, [sessionId]);
+  } catch (err) {
+    console.error('Error invalidating session:', err);
+    return false;
+  }
+  return result.rowCount > 0;
+}
+
 /*
   Middleware to authenticate requests via session ID to protected routes
   returns true if authenticated, false otherwise
@@ -98,5 +117,6 @@ function getSessionIdFromRequest(req) {
 module.exports = {
   createUser,
   authenticateUser,
-  middleAuthenticateRequest
+  middleAuthenticateRequest,
+  invalidateUserSession
 };
