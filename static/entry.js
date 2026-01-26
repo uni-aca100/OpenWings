@@ -8,12 +8,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // wrapper for bird map related functions, and data state
 const speciesMapHandler = {
-  lastGeoJsonData: null,
+  lastScientificName: null,
+  lastLayer: null,
 
   /* get the color style based on its season */
   getBirdStyle(feature) {
     switch (feature.properties.season) {
-      case 'resident': return { color: "#800080", fillColor: "#800080", fillOpacity: 0.5 }; // Purple
+      case 'nonbreeding': return { color: "#800080", fillColor: "#800080", fillOpacity: 0.5 }; // Purple
       case 'breeding': return { color: "#FF0000", fillColor: "#FF0000", fillOpacity: 0.5 }; // Red
       case 'postbreeding_migration': return { color: "#0000FF", fillColor: "#0000FF", fillOpacity: 0.5 }; // Blue
       case 'prebreeding_migration': return { color: "#FFFF00", fillColor: "#FFFF00", fillOpacity: 0.5 }; // Yellow
@@ -38,11 +39,20 @@ const speciesMapHandler = {
     })
       .then(response => response.json())
       .then(data => {
-        this.lastGeoJsonData = data;
-        L.geoJSON(data, {
+        if (this.lastLayer) {
+          map.removeLayer(this.lastLayer);
+        }
+        this.lastScientificName = data[0]?.properties?.species_scientific_name;
+        this.lastLayer = L.geoJSON(data, {
           style: this.getBirdStyle
-        }).addTo(map);
+        })
+        this.lastLayer.addTo(map);
       });
+  },
+
+  fetchAndUpdateSeasonGeoJsonData(season) {
+    console.log(this.lastScientificName, season);
+    this.fetchAndUpdateGeoJsonData(this.lastScientificName, season);
   },
 };
 
@@ -96,4 +106,12 @@ document.getElementById('js-search-btn').addEventListener('click', (e) => {
   const speciesName = document.getElementById('js-search-input').value;
   // breeding season is default for new searches
   birdSpeciesViewHandler.updateViewData(speciesName, 'breeding');
+});
+
+// on season button click update the map data
+document.getElementById('js-season-select').addEventListener('click', (e) => {
+  if (e.target && e.target.matches('button.season-btn')) {
+    const season = e.target.getAttribute('data-season');
+    speciesMapHandler.fetchAndUpdateSeasonGeoJsonData(season);
+  }
 });

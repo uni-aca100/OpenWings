@@ -229,10 +229,14 @@ body {
   box-shadow: 0 6px 20px rgba(16, 24, 40, 0.06);
   width: 100%;
   height: 100%;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
 }
 
 .bird-map {
   min-height: 360px;
+  flex-grow: 1;
   overflow: hidden;
 }
 
@@ -400,6 +404,93 @@ body {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
 }
 
+/* Season select (4 equal buttons with icons) */
+.season-select {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-xs) 0 0 0;
+  align-items: center;
+  justify-content: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  flex-grow: 0;
+}
+
+/* each button takes equal width */
+.season-select .season-btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+  user-select: none;
+  padding: 0.5rem;
+}
+
+/* icons */
+.season-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* individual season colors (use existing variables where reasonable) */
+.season-btn[data-season="nonbreeding"] {
+  background: linear-gradient(180deg, #ee84ee, #ec4eec);
+  border-color: rgba(245, 37, 37, 0.14);
+}
+
+.season-btn[data-season="breeding"] {
+  background: linear-gradient(180deg, #f03737, #ff4d4d);
+  border-color: rgba(245, 37, 37, 0.14);
+}
+
+.season-btn[data-season="postbreeding_migration"] {
+  background: linear-gradient(180deg, #3838f7, #4d4dff);
+  border-color: rgba(37, 99, 235, 0.14);
+}
+
+.season-btn[data-season="prebreeding_migration"] {
+  background: linear-gradient(180deg, #f1bb55, #ffbf40);
+  border-color: rgba(245, 158, 66, 0.14);
+}
+
+/* hover, active, focus states */
+.season-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.06);
+}
+
+.season-btn:active {
+  transform: translateY(0);
+  opacity: 0.95;
+}
+
+/* Visible focus for keyboard users */
+.season-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+  border-radius: 12px;
+}
+
+.season-btn:focus-visible {
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+/* pressed state styling (update aria-pressed via JS when toggled) */
+.season-btn[aria-pressed="true"] {
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.08);
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
 
 @media (max-width: 900px) {
   .grid {
@@ -455,5 +546,15 @@ body {
     border-left: none;
     border-top: var(--space-xs) solid var(--color-border);
     grid-column: 1 / -1;
+  }
+
+  .season-select {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .season-select .season-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 120px;
   }
 }

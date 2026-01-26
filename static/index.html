@@ -78,8 +78,30 @@
         </div>
         <div class="bird-map-wrapper">
           <div id="map" class="bird-map"></div>
+
+          <!-- season select button -->
+          <div id="js-season-select" class="season-select" role="toolbar" aria-label="Select season">
+            <button class="season-btn" type="button" data-season="nonbreeding" aria-label="Resident">
+              <img src="/static/icons/resident.svg" class="season-icon" alt="" aria-hidden="true">
+              <span class="sr-only">Resident</span>
+            </button>
+            <button class="season-btn" type="button" data-season="breeding" aria-label="Breeding">
+              <img src="/static/icons/breeding.svg" class="season-icon" alt="" aria-hidden="true">
+              <span class="sr-only">Breeding</span>
+            </button>
+            <button class="season-btn" type="button" data-season="postbreeding_migration"
+              aria-label="Post-breeding Migration">
+              <img src="/static/icons/nonbreeding.svg" class="season-icon" alt="" aria-hidden="true">
+              <span class="sr-only">Post-breeding Migration</span>
+            </button>
+            <button class="season-btn" type="button" data-season="prebreeding_migration"
+              aria-label="Rebreeding Migration">
+              <img src="/static/icons/migration.svg" class="season-icon" alt="" aria-hidden="true">
+              <span class="sr-only">Rebreeding Migration</span>
+            </button>
+
+          </div>
         </div>
-      </div>
 
     </main>
   </div>
