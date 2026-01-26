@@ -8,16 +8,15 @@
   <link rel="stylesheet" href="/static/utils.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
 
 <body>
 
   <header class="navbar">
     <div class="container flex items-center justify-between">
-      <div class="brand text-lg"><a href="/" class="brand-link">Open Wings</a></div>
-      <div><button id="login-btn" class="btn btn-primary">Login</button></div>
+      <div class="brand"><a href="/" class="brand-link">Open Wings</a></div>
+      <div><a href="/profile" class="icon-link"><i class="fa-solid fa-circle-user"></i></a></div>
     </div>
   </header>
 
@@ -105,7 +104,8 @@
 
     </main>
   </div>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="/static/entry.js"></script>
 </body>
 

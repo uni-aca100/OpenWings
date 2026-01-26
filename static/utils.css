@@ -31,6 +31,7 @@
   --font-md: 1rem;
   --font-lg: 1.25rem;
   --font-xl: 1.5rem;
+  --font-xxl: 2rem;
 }
 
 /* 12-column grid container */
@@ -129,13 +130,18 @@ body {
 }
 
 .brand {
-  font-size: var(--font-lg);
+  font-size: var(--font-xxl);
   font-weight: 700;
 }
 
-.brand-link {
+.brand-link,
+.icon-link {
   color: var(--color-primary);
   text-decoration: none;
+}
+
+.icon-link i {
+  font-size: var(--font-xxl);
 }
 
 .btn {

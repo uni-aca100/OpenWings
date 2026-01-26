@@ -2,19 +2,45 @@ const http = require('http');
 const db = require('./db/db');
 const fs = require('fs');
 const path = require('path');
+const auth = require('./auth');
+
 const STATIC_ROOT = path.join(__dirname, '..', 'static');
 
 const PORT = 3000;
+const protectedRoutes = ['/profile'];
 
 const server = http.createServer(async (req, res) => {
   const { method, url } = req;
 
+  // List of protected routes that require authentication
+  if (protectedRoutes.includes(req.url)) {
+    // handle the authentication via a middleware that attaches userId to req if authenticated
+    if (!(await auth.middleAuthenticateRequest(req, res))) {
+      return;
+    }
+  }
+
   if (method === 'GET' && url === '/') {
     // Route to serve the homepage
     serveStaticFileFromPath(path.join(__dirname, '../static/index.html'), res);
+  } else if (method === 'GET' && url === '/login') {
+    // Route to serve the login page
+    serveStaticFileFromPath(path.join(__dirname, '../static/login.html'), res);
+  } else if (method === 'GET' && url === '/register') {
+    // Route to serve the registration page
+    serveStaticFileFromPath(path.join(__dirname, '../static/register.html'), res);
+  } else if (method === 'GET' && url === '/profile') {
+    // Route to serve the profile page
+    serveStaticFileFromPath(path.join(__dirname, '../static/profile.html'), res);
   } else if (method === 'GET' && url.startsWith('/static/')) {
     // Route to serve static files
     serveStaticFile(req, res);
+  } else if (method === 'POST' && url === '/register') {
+    // Route to handle registration requests
+    handleRegistration(req, res);
+  } else if (method === 'POST' && url === '/login') {
+    // Route to handle login requests
+    handleLogin(req, res);
   } else if (method === 'POST' && url === '/api/species/info') {
     // Route to handle API requests for species information
     handleAPISpecies(req, res);
@@ -67,9 +93,42 @@ function serveStaticFileFromPath(filePath, res) {
   });
 }
 
+// handle registration requests (POST /register)
+// expects JSON body with username and password
+function handleRegistration(req, res) {
+  parsePostJsonData(res, req, async (data) => {
+    const success = await auth.createUser(data.username, data.password, data.email);
+    if (success) {
+      // Redirect to login page after successful registration
+      sendJSONResponse(res, 200, { redirectUrl: '/login' });
+    } else {
+      sendJSONResponse(res, 400, { error: 'Registration failed. Username may already exist.' });
+    }
+  });
+}
+
+// handle login requests (POST /login)
+// expects JSON body with username and password
+function handleLogin(req, res) {
+  parsePostJsonData(res, req, async (data) => {
+    const sessionId = await auth.authenticateUser(data.username, data.password);
+    if (sessionId) {
+      // Set the session ID in a cookie
+      // HttpOnly: prevents JavaScript (document.cookie) from reading the session ID.
+      // Path=/ : cookie is sent for all paths on the domain.
+      // SameSite=Strict : Prevents the cookie from being sent when clicking links from external websites (stops CSRF attacks).
+      res.setHeader('Set-Cookie', `sid=${sessionId}; HttpOnly; Path=/; Max-Age=2700; SameSite=Strict`); // 45 minutes
+      // Redirect to profile page after successful login
+      sendJSONResponse(res, 200, { redirectUrl: '/profile' });
+    } else {
+      sendJSONResponse(res, 401, { error: 'Invalid credentials' });
+    }
+  });
+}
+
 // handle POST data conversion to JSON (presume application/json content type)
 // the handleData callback is called with the parsed JSON data
-function parsePostData(res, req, handleData) {
+function parsePostJsonData(res, req, handleData) {
   let body = '';
   req.on('data', chunk => {
     body += chunk.toString();
@@ -92,7 +151,7 @@ function parsePostData(res, req, handleData) {
 // route to handle API requests for species GeoJSON data
 function handleAPISpeciesGeoJSON(req, res) {
   // get the species name and season from the POST data and query the database
-  parsePostData(res, req, (data) => {
+  parsePostJsonData(res, req, (data) => {
     handleAPIQuery(res, async () => {
       return await db.queryGeoJSONSpecies(data.speciesName, data.season);
     });
@@ -102,7 +161,7 @@ function handleAPISpeciesGeoJSON(req, res) {
 // route to handle API requests for species media data
 function handleAPISpeciesMedia(req, res) {
   // get the species from the POST data and query the database
-  parsePostData(res, req, (data) => {
+  parsePostJsonData(res, req, (data) => {
     handleAPIQuery(res, async () => {
       return await db.querySpeciesMedia(data.speciesName);
     });
@@ -112,7 +171,7 @@ function handleAPISpeciesMedia(req, res) {
 // route to handle API requests for species data
 function handleAPISpecies(req, res) {
   // get the species name from the POST data and query the database
-  parsePostData(res, req, (data) => {
+  parsePostJsonData(res, req, (data) => {
     handleAPIQuery(res, async () => {
       return await db.querySpecies(data.speciesName);
     });

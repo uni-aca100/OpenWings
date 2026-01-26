@@ -17,6 +17,14 @@ CREATE TABLE users (
   email TEXT NOT NULL
 );
 
+-- table sessions, storing user sessions
+-- relationship: many-to-one with users table
+CREATE TABLE sessions (
+  id TEXT PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  expires_at TIMESTAMP
+);
+
 -- table species, storing bird species information
 CREATE TABLE species (
   scientific_name TEXT PRIMARY KEY,
@@ -81,8 +89,7 @@ CREATE TABLE observations (
   observed_at TIMESTAMP NOT NULL
 );
 
-INSERT INTO users (username, password, email) VALUES
-('testuser', 'password123', 'testuser@example.com');
+
 
 -- Sample data for species table
 INSERT INTO species (scientific_name, common_name, family, order_name, diet, conservation_status) VALUES
