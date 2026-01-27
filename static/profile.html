@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile</title>
-  <link rel="stylesheet" href="/static/utils.css">
+  <link rel="stylesheet" href="/static/profile.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
@@ -19,6 +19,161 @@
     </div>
   </header>
 
+  <!-- main contain a view one the bird searched/default -->
+  <div class="wrap-content container">
+    <main class="profile-view">
+      <div class="profile-info grid gap-0">
+
+        <div class="map-wrapper">
+          <div id="map" class="obs-map"></div>
+        </div>
+
+        <div class="profile-meta-wrapper">
+          <div class="profile-meta">
+            <h1 class="user-name" id="js-username">...</h1>
+            <div class="profile-foot"><em>Profile</em></div>
+          </div>
+
+          <!-- button open insert observation modal -->
+          <div class="profile-actions">
+            <button id="js-insert-observation" class="btn">Insert Observation</button>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+    <!-- modal for inserting an observation -->
+    <dialog id="js-insert-observation-modal" class="modal">
+      <form method="dialog" class="modal-content">
+        <button class="modal-close-btn" aria-label="Close">&times;</button>
+        <h2 class="modal-title">Insert New Observation</h2>
+
+        <div class="form-group">
+          <label for="js-species-input">Species Scientific Name</label>
+          <input type="text" id="js-species-input" name="species" required />
+        </div>
+        <div class="form-group">
+          <label for="js-latitude-input">Latitude</label>
+          <input type="number" step="any" id="js-latitude-input" name="latitude" required />
+        </div>
+
+        <div class="form-group">
+          <label for="js-longitude-input">Longitude</label>
+          <input type="number" step="any" id="js-longitude-input" name="longitude" required />
+        </div>
+
+        <div class="form-group">
+          <label for="js-observed-at-input">Observed At</label>
+          <input type="datetime-local" id="js-observed-at-input" name="observedAt" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit Observation</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+      /* leaflet setup */
+      const map = L.map('map').setView([51.505, -0.09], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+
+      // Fetch GeoJSON data about observation points and update the map
+      const observationPointsHandler = {
+        lastLayer: null,
+
+        fetchAndUpdateGeoJSON() {
+          fetch('/api/user/observations', {
+            method: 'POST'
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (this.lastLayer) {
+                map.removeLayer(this.lastLayer);
+              }
+              this.lastLayer = L.geoJSON(data, {
+                onEachFeature: (feature, layer) => {
+                  layer.bindPopup(`<em>species:</em> ${feature.properties.speciesName} <br />
+                                   <em>approved:</em> ${feature.properties.approved} <br />
+                                   <em>observed at:</em> ${new Date(feature.properties.observedAt).toLocaleDateString()}`);
+                }
+              });
+              this.lastLayer.addTo(map);
+            }).catch(error => {
+              console.error('Error fetching observation points:', error);
+            });
+        }
+      };
+
+      // Fetch user information and update the profile display
+      const userInfoHandler = {
+        fetchAndUpdateUserInfo() {
+          fetch('/api/user', {
+            method: 'POST'
+          })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('js-username').textContent = data.username;
+            });
+        }
+      };
+
+      // Initialize the profile page information
+      observationPointsHandler.fetchAndUpdateGeoJSON();
+      userInfoHandler.fetchAndUpdateUserInfo();
+
+      // Modal handling for inserting new observation
+      const insertObservationBtn = document.getElementById('js-insert-observation');
+      const insertObservationModal = document.getElementById('js-insert-observation-modal');
+      const modalCloseBtn = insertObservationModal.querySelector('.modal-close-btn');
+      const observationForm = insertObservationModal.querySelector('form');
+
+      insertObservationBtn.addEventListener('click', () => {
+        insertObservationModal.showModal();
+      });
+
+      modalCloseBtn.addEventListener('click', () => {
+        insertObservationModal.close();
+      });
+
+      observationForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(observationForm);
+        const observationData = {
+          species: formData.get('species'),
+          latitude: parseFloat(formData.get('latitude')),
+          longitude: parseFloat(formData.get('longitude')),
+          observedAt: new Date(formData.get('observedAt')).toISOString()
+        };
+
+        fetch('/api/user/observations/new', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(observationData)
+        })
+          .then(response => response.json())
+          .then(data => {
+            // Refresh the observation points on the map
+            observationPointsHandler.fetchAndUpdateGeoJSON();
+            // Close the modal
+            insertObservationModal.close();
+          })
+          .catch(error => {
+            console.error('Error submitting observation:', error);
+          });
+      });
+    </script>
 </body>
 
 </html>

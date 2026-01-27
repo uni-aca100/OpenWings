@@ -14,7 +14,9 @@ CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   username TEXT NOT NULL,
   password TEXT NOT NULL,
-  email TEXT NOT NULL
+  email TEXT NOT NULL,
+  UNIQUE(email),
+  UNIQUE(username)
 );
 
 -- table sessions, storing user sessions
@@ -62,6 +64,7 @@ the goal is to spot as many species as possible within a time frame.
 */
 CREATE TABLE challenge (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
   start_date TIMESTAMP NOT NULL,
   end_date TIMESTAMP NOT NULL,
   -- additional rules about the point system used related to species spotted conservation status
@@ -69,7 +72,8 @@ CREATE TABLE challenge (
   nt_points DECIMAL(5, 2) DEFAULT 2, -- near threatened
   vu_points DECIMAL(5, 2) DEFAULT 5, -- vulnerable
   en_points DECIMAL(5, 2) DEFAULT 6, -- endangered
-  cr_points DECIMAL(5, 2) DEFAULT 8  -- critically endangered
+  cr_points DECIMAL(5, 2) DEFAULT 8,  -- critically endangered
+  UNIQUE(name)
 );
 
 -- association table between challenge and users many-to-many relationship
@@ -86,7 +90,8 @@ CREATE TABLE observations (
   user_id UUID REFERENCES users(id),
   species_scientific_name TEXT REFERENCES species(scientific_name),
   location GEOMETRY(POINT, 4326),
-  observed_at TIMESTAMP NOT NULL
+  observed_at TIMESTAMP NOT NULL,
+  approved BOOLEAN DEFAULT FALSE
 );
 
 

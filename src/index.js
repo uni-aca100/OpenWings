@@ -7,7 +7,7 @@ const auth = require('./auth');
 const STATIC_ROOT = path.join(__dirname, '..', 'static');
 
 const PORT = 3000;
-const protectedRoutes = ['/profile', `/profile/logout`];
+const protectedRoutes = ['/profile', `/profile/logout`, `/api/user/observations`, `/api/user/observations/new`, `/api/user`];
 
 const server = http.createServer(async (req, res) => {
   const { method, url } = req;
@@ -53,6 +53,15 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'POST' && url === '/api/species/media') {
     // Route to handle API requests for species media data
     handleAPISpeciesMedia(req, res);
+  } else if (method === 'POST' && url === '/api/user/observations') {
+    // Route to handle API requests for user observations
+    handleApiUserObservations(req, res);
+  } else if (method === 'POST' && url === '/api/user/observations/new') {
+    // Route to handle API requests for new user observations
+    handleApiUserObservationsNew(req, res);
+  } else if (method === 'POST' && url === '/api/user') {
+    // Route to handle API requests for user information
+    handleApiUser(req, res);
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not Found' }));
@@ -191,6 +200,38 @@ function handleAPISpecies(req, res) {
   parsePostJsonData(res, req, (data) => {
     handleAPIQuery(res, async () => {
       return await db.querySpecies(data.speciesName);
+    });
+  });
+}
+
+// route to handle API requests for user observations, requires authentication
+// return all observations made by the authenticated user as a JSON array
+function handleApiUserObservations(req, res) {
+  // get the userId from the authenticated request and query the database
+  // req.userId set by the authentication middleware
+  handleAPIQuery(res, async () => {
+    return await db.getUserObservations(req.userId);
+  });
+}
+
+// route to handle API requests for user information, requires authentication
+// return user information as a JSON object
+function handleApiUser(req, res) {
+  // get the userId from the authenticated request and query the database
+  // req.userId set by the authentication middleware
+  handleAPIQuery(res, async () => {
+    return await db.getUserById(req.userId);
+  });
+}
+
+// route to handle API requests for adding new user observations, requires authentication
+// expects JSON body with species, latitude, longitude, observedAt
+function handleApiUserObservationsNew(req, res) {
+  parsePostJsonData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      // req.userId set by the authentication middleware
+      const rst = await db.insertUserObservation(req.userId, data.species, data.latitude, data.longitude, data.observedAt);
+      return { success: rst };
     });
   });
 }

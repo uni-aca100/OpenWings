@@ -14,6 +14,9 @@ module.exports = {
   queryGeoJSONSpecies,
   querySpeciesMedia,
   querySpecies,
+  getUserObservations,
+  getUserById,
+  insertUserObservation,
 };
 
 // get species range as GeoJSON features array, filtered by scientific name (or common name) and season
@@ -89,6 +92,75 @@ async function querySpecies(speciesId) {
   };
 }
 
+// get all observations made by a specific user
+async function getUserObservations(userId) {
+  if (!userId) {
+    console.error('userId parameter is required');
+    return [];
+  }
+  const sql = `
+    SELECT species_scientific_name, observed_at, ST_AsGeoJSON(location)::json AS location, approved
+    FROM observations
+    WHERE user_id = $1
+  `;
+  try {
+    const result = await pool.query(sql, [userId]);
+    return result.rows.map(row => ({
+      type: 'Feature',
+      properties: {
+        speciesName: row.species_scientific_name,
+        observedAt: row.observed_at,
+        approved: row.approved,
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: row.location.coordinates,
+      },
+    }));
+  } catch (error) {
+    console.error('Error fetching user observations:', error);
+    return [];
+  }
+}
+
+// get user information by userId return (username and email)
+async function getUserById(userId) {
+  if (!userId) {
+    console.error('userId parameter is required');
+    return null;
+  }
+  const sql = `
+    SELECT * FROM users
+    WHERE id = $1
+  `;
+  const result = await pool.query(sql, [userId]);
+  if (result.rows[0]) {
+    return {
+      username: result.rows[0].username,
+      email: result.rows[0].email,
+    };
+  }
+  return null;
+}
+
+// insert user observation into the database
+async function insertUserObservation(userId, speciesScientificName, latitude, longitude, observedAt) {
+  if (!userId || !speciesScientificName || !latitude || !longitude || !observedAt) {
+    console.error('All parameters are required');
+    return false;
+  }
+  const sql = `
+    INSERT INTO observations (user_id, species_scientific_name, location, observed_at)
+    VALUES ($1, $2, ST_SetSRID(ST_MakePoint($3, $4), 4326), $5)
+  `;
+  try {
+    const rst = await pool.query(sql, [userId, speciesScientificName, longitude, latitude, observedAt]);
+    return rst.rowCount > 0;
+  } catch (error) {
+    console.error('Error inserting user observation:', error);
+    return false;
+  }
+}
 
 /* get all challenges where the given user is a participant, and the challenge is active */
 async function getUserActiveChallenges(userId) {

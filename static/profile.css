@@ -1,0 +1,236 @@
+:root {
+  /* Colors */
+  --color-primary: #2563eb;
+  --color-secondary: #64748b;
+  --color-accent: #f59e42;
+  --color-success: #22c55e;
+  --color-warning: #facc15;
+  --color-danger: #ef4444;
+  --color-bg: #fafbfd;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* Font sizes */
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
+  --font-md: 1rem;
+  --font-lg: 1.25rem;
+  --font-xl: 1.5rem;
+  --font-xxl: 2rem;
+}
+
+/* 12-column grid container */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  background: var(--color-bg);
+  align-items: start;
+}
+
+.gap-0 {
+  gap: 0;
+}
+
+
+/* --- Utility helpers (for navbar and layout) --- */
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.p-md {
+  padding: var(--space-md);
+}
+
+.p-sm {
+  padding: var(--space-sm);
+}
+
+.px-md {
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+.py-sm {
+  padding-top: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+
+.text-sm {
+  font-size: var(--font-sm);
+}
+
+.text-md {
+  font-size: var(--font-md);
+}
+
+.text-lg {
+  font-size: var(--font-lg);
+}
+
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+/* body normalization */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+/* NAVBAR + BUTTON */
+.navbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
+  height: 64px;
+}
+
+.navbar .container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.brand {
+  font-size: var(--font-xxl);
+  font-weight: 700;
+}
+
+.brand-link,
+.icon-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.icon-link i {
+  font-size: var(--font-xxl);
+}
+
+.wrap-content {
+  margin-top: 64px;
+}
+
+.profile-view {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+  color: var(--color-text);
+  margin-bottom: var(--space-lg);
+}
+
+/* profile-info card */
+.profile-info {
+  border-bottom: var(--space-xs) solid var(--color-border);
+}
+
+/* Title area: common name + scientific name */
+.profile-info .map-wrapper {
+  grid-column: 1 / 9;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin: calc(var(--space-md) + 0.25rem);
+}
+
+.profile-info .user-name {
+  margin: 0;
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.profile-info .profile-foot {
+  font-size: 0.95rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.profile-info .profile-meta {
+  margin: calc(var(--space-md) + 0.25rem);
+}
+
+.obs-map {
+  min-height: 360px;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.profile-meta-wrapper {
+  border-left: var(--space-xs) solid var(--color-border);
+  width: 100%;
+  grid-column: 9 / 13;
+  height: 100%;
+}
+
+.profile-info .user-name {
+  margin: 0;
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+  text-transform: capitalize;
+}
+
+.profile-info .profile-foot {
+  font-size: 0.95rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .profile-info .map-wrapper {
+    grid-column: 1 / -1;
+  }
+
+  .profile-meta-wrapper {
+    border-left: none;
+    border-top: var(--space-xs) solid var(--color-border);
+    grid-column: 1 / -1;
+  }
+}
+
+/* small screens: stack content for readability */
+@media (max-width: 600px) {}
