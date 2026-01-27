@@ -34,9 +34,13 @@
             <div class="profile-foot"><em>Profile</em></div>
           </div>
 
-          <!-- button open insert observation modal -->
           <div class="profile-actions">
+            <!-- button open insert observation modal -->
             <button id="js-insert-observation" class="btn">Insert Observation</button>
+            <!-- button open create new challenge modal -->
+            <button id="js-create-challenge" class="btn">Create Challenge</button>
+            <!-- button open invite user to a challenge modal -->
+            <button id="js-invite-user" class="btn">Invite User</button>
           </div>
 
         </div>
@@ -75,6 +79,75 @@
       </form>
     </dialog>
 
+    <!-- modal for creating a new challenge -->
+    <dialog id="js-create-challenge-modal" class="modal">
+      <form method="dialog" class="modal-content">
+        <button class="modal-close-btn" aria-label="Close">&times;</button>
+        <h2 class="modal-title">Create New Challenge</h2>
+
+        <div class="form-group">
+          <label for="js-challenge-name-input">Challenge Name</label>
+          <input type="text" id="js-challenge-name-input" name="name" required />
+        </div>
+        <div class="form-group">
+          <label for="js-challenge-start-date-input">Start Date</label>
+          <input type="datetime-local" id="js-challenge-start-date-input" name="startDate" required />
+        </div>
+
+        <div class="form-group">
+          <label for="js-challenge-end-date-input">End Date</label>
+          <input type="datetime-local" id="js-challenge-end-date-input" name="endDate" required />
+        </div>
+
+        <div class="form-group">
+          <label for="js-challenge-lc-points-input">Least Concern Points</label>
+          <input type="number" step="any" id="js-challenge-lc-points-input" name="lcPoints" value="1" />
+        </div>
+        <div class="form-group">
+          <label for="js-challenge-nt-points-input">Near Threatened Points</label>
+          <input type="number" step="any" id="js-challenge-nt-points-input" name="ntPoints" value="2" />
+        </div>
+        <div class="form-group">
+          <label for="js-challenge-vu-points-input">Vulnerable Points</label>
+          <input type="number" step="any" id="js-challenge-vu-points-input" name="vuPoints" value="5" />
+        </div>
+        <div class="form-group">
+          <label for="js-challenge-en-points-input">Endangered Points</label>
+          <input type="number" step="any" id="js-challenge-en-points-input" name="enPoints" value="6" />
+        </div>
+        <div class="form-group">
+          <label for="js-challenge-cr-points-input">Critically Endangered Points</label>
+          <input type="number" step="any" id="js-challenge-cr-points-input" name="crPoints" value="8" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Create Challenge</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- modal for inviting user to a challenge -->
+    <dialog id="js-invite-user-modal" class="modal">
+      <form method="dialog" class="modal-content">
+        <button class="modal-close-btn" aria-label="Close">&times;</button>
+        <h2 class="modal-title">Invite User to Challenge</h2>
+
+        <div class="form-group">
+          <label for="js-invite-challenge-input">Challenge name</label>
+          <input type="text" id="js-invite-challenge-input" name="challenge" required />
+        </div>
+
+        <div class="form-group">
+          <label for="js-invite-username-input">Username</label>
+          <input type="text" id="js-invite-username-input" name="username" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Send Invitation</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
@@ -96,6 +169,11 @@
           })
             .then(response => response.json())
             .then(data => {
+              if (!data) {
+                console.error('Invalid GeoJSON data received');
+                return;
+              }
+
               if (this.lastLayer) {
                 map.removeLayer(this.lastLayer);
               }
@@ -126,9 +204,17 @@
         }
       };
 
+      const challengeListHandler = {
+        fetchAndUpdateChallengeList() {
+          // Placeholder for fetching and updating challenge list
+          // Implementation depends on how challenges are displayed in the profile
+        }
+      };
+
       // Initialize the profile page information
       observationPointsHandler.fetchAndUpdateGeoJSON();
       userInfoHandler.fetchAndUpdateUserInfo();
+      challengeListHandler.fetchAndUpdateChallengeList();
 
       // Modal handling for inserting new observation
       const insertObservationBtn = document.getElementById('js-insert-observation');
@@ -140,7 +226,8 @@
         insertObservationModal.showModal();
       });
 
-      modalCloseBtn.addEventListener('click', () => {
+      modalCloseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         insertObservationModal.close();
       });
 
@@ -173,6 +260,105 @@
             console.error('Error submitting observation:', error);
           });
       });
+
+      // Modal handling for creating new challenge
+      const createChallengeBtn = document.getElementById('js-create-challenge');
+      const createChallengeModal = document.getElementById('js-create-challenge-modal');
+      const challengeModalCloseBtn = createChallengeModal.querySelector('.modal-close-btn');
+      const challengeForm = createChallengeModal.querySelector('form');
+
+      createChallengeBtn.addEventListener('click', () => {
+        createChallengeModal.showModal();
+      });
+
+      challengeModalCloseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        createChallengeModal.close();
+      });
+
+      challengeForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(challengeForm);
+        const challengeData = {
+          name: formData.get('name'),
+          startDate: new Date(formData.get('startDate')).toISOString(),
+          endDate: new Date(formData.get('endDate')).toISOString(),
+          points: {
+            lc: parseFloat(formData.get('lcPoints')),
+            nt: parseFloat(formData.get('ntPoints')),
+            vu: parseFloat(formData.get('vuPoints')),
+            en: parseFloat(formData.get('enPoints')),
+            cr: parseFloat(formData.get('crPoints'))
+          }
+        };
+
+        if (challengeData.startDate >= challengeData.endDate || Date.now() >= challengeData.endDate || Date.now() >= challengeData.startDate) {
+          alert('Invalid date range for the challenge.');
+          return;
+        }
+
+        fetch('/api/user/challenges/new', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(challengeData)
+        })
+          .then(response => response.json())
+          .then(data => {
+            // Refresh the challenge list
+            challengeListHandler.fetchAndUpdateChallengeList();
+            // Close the modal
+            createChallengeModal.close();
+          })
+          .catch(error => {
+            console.error('Error submitting challenge:', error);
+          });
+      });
+
+      // Modal handling for inviting user to a challenge
+      const inviteUserBtn = document.getElementById('js-invite-user');
+      const inviteUserModal = document.getElementById('js-invite-user-modal');
+      const inviteModalCloseBtn = inviteUserModal.querySelector('.modal-close-btn');
+      const inviteForm = inviteUserModal.querySelector('form');
+
+      inviteUserBtn.addEventListener('click', () => {
+        inviteUserModal.showModal();
+      });
+
+      inviteModalCloseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        inviteUserModal.close();
+      });
+
+      inviteForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(inviteForm);
+        const inviteData = {
+          challenge: formData.get('challenge'),
+          username: formData.get('username')
+        };
+
+        fetch('/api/user/challenges/invite', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(inviteData)
+        })
+          .then(response => response.json())
+          .then(data => {
+            // Handle successful invitation
+            console.log('User invited successfully:', data);
+            inviteUserModal.close();
+          })
+          .catch(error => {
+            console.error('Error inviting user:', error);
+          });
+      });
+
     </script>
 </body>
 

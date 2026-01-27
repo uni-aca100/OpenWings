@@ -17,6 +17,9 @@ module.exports = {
   getUserObservations,
   getUserById,
   insertUserObservation,
+  insertChallenge,
+  addUserToChallenge,
+  inviteUserToChallenge
 };
 
 // get species range as GeoJSON features array, filtered by scientific name (or common name) and season
@@ -143,6 +146,23 @@ async function getUserById(userId) {
   return null;
 }
 
+// get userId by username
+async function getUserIdByUsername(username) {
+  if (!username) {
+    console.error('username parameter is required');
+    return null;
+  }
+  const sql = `
+    SELECT id FROM users
+    WHERE LOWER(username) = $1
+  `;
+  const result = await pool.query(sql, [username.toLowerCase()]);
+  if (result.rows[0]) {
+    return result.rows[0].id;
+  }
+  return null;
+}
+
 // insert user observation into the database
 async function insertUserObservation(userId, speciesScientificName, latitude, longitude, observedAt) {
   if (!userId || !speciesScientificName || !latitude || !longitude || !observedAt) {
@@ -158,6 +178,112 @@ async function insertUserObservation(userId, speciesScientificName, latitude, lo
     return rst.rowCount > 0;
   } catch (error) {
     console.error('Error inserting user observation:', error);
+    return false;
+  }
+}
+
+/*
+ insert a new challenge into the database, and add the user creating it as participant
+ points is an object with the following structure:
+ {
+   lc: number, conservation status points for least concern species
+   nt: number,
+   vu: number,
+   en: number,
+   cr: number
+ }
+ */
+async function insertChallenge(name, startDate, endDate, userId, points) {
+  if (!name || !startDate || !endDate || !userId || !points) {
+    console.error('All parameters are required');
+    return false;
+  }
+  const sql = `
+    INSERT INTO challenge (name, start_date, end_date, lc_points, nt_points, vu_points, en_points, cr_points)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+  `;
+  try {
+    const rst = await pool.query(sql, [name, startDate, endDate, points.lc, points.nt, points.vu, points.en, points.cr]);
+    let success = false;
+    if (rst.rowCount > 0) {
+      // Add the user as a participant in the challenge
+      success = await addUserToChallenge(name, userId);
+    }
+    return success;
+  } catch (error) {
+    console.error('Error inserting challenge:', error);
+    return false;
+  }
+}
+
+// add a user as participant to a challenge by challenge name
+async function addUserToChallenge(challengeName, userId) {
+  if (!challengeName || !userId) {
+    console.error('Both challengeName and userId parameters are required');
+    return false;
+  }
+  const sql = `
+    INSERT INTO challenge_participants (challenge_name, user_id)
+    VALUES ($1, $2)
+  `;
+  try {
+    const rst = await pool.query(sql, [challengeName, userId]);
+    return rst.rowCount > 0;
+  } catch (error) {
+    console.error('Error adding user to challenge:', error);
+    return false;
+  }
+}
+
+// invite a user to a challenge by challengeId, userId of the inviter, and inviteeUsername
+async function inviteUserToChallenge(challengeName, userId, inviteeUsername) {
+  if (!challengeName || !userId || !inviteeUsername) {
+    console.error('All parameters are required');
+    return false;
+  }
+
+  // check if the user inviting is a participant in the challenge
+  const isParticipant = await checkUserIsParticipantInChallenge(challengeName, userId);
+  if (!isParticipant) {
+    console.error('User inviting is not a participant in the challenge');
+    return false;
+  }
+
+  const inviteeId = await getUserIdByUsername(inviteeUsername);
+  if (!inviteeId) {
+    console.error('Invalid invitee username');
+    return false;
+  }
+
+  const sql = `
+    INSERT INTO challenge_participants (challenge_name, user_id)
+    VALUES ($1, $2)
+  `;
+  try {
+    const rst = await pool.query(sql, [challengeName, inviteeId]);
+    return rst.rowCount > 0;
+  } catch (error) {
+    console.error('Error inviting user to challenge:', error);
+    return false;
+  }
+}
+
+// check if a user is participant in a challenge
+async function checkUserIsParticipantInChallenge(challengeName, userId) {
+  if (!challengeName || !userId) {
+    console.error('Both challengeName and userId parameters are required');
+    return false;
+  }
+  const sql = `
+    SELECT 1
+    FROM challenge_participants
+    WHERE challenge_name = $1 AND user_id = $2
+  `;
+  try {
+    const result = await pool.query(sql, [challengeName, userId]);
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error('Error checking user participation in challenge:', error);
     return false;
   }
 }

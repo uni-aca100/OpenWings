@@ -7,7 +7,15 @@ const auth = require('./auth');
 const STATIC_ROOT = path.join(__dirname, '..', 'static');
 
 const PORT = 3000;
-const protectedRoutes = ['/profile', `/profile/logout`, `/api/user/observations`, `/api/user/observations/new`, `/api/user`];
+const protectedRoutes = [
+  '/profile',
+  `/profile/logout`,
+  `/api/user/observations`,
+  `/api/user/observations/new`,
+  `/api/user`,
+  `/api/user/challenges/new`,
+  `/api/user/challenges/invite`
+];
 
 const server = http.createServer(async (req, res) => {
   const { method, url } = req;
@@ -59,6 +67,12 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'POST' && url === '/api/user/observations/new') {
     // Route to handle API requests for new user observations
     handleApiUserObservationsNew(req, res);
+  } else if (method === 'POST' && url === '/api/user/challenges/new') {
+    // Route to handle API requests for creating new challenges
+    handleApiCreateChallenge(req, res);
+  } else if (method === 'POST' && url === '/api/user/challenges/invite') {
+    // Route to handle API requests for inviting users to challenges
+    handleApiInviteUserToChallenge(req, res);
   } else if (method === 'POST' && url === '/api/user') {
     // Route to handle API requests for user information
     handleApiUser(req, res);
@@ -231,6 +245,40 @@ function handleApiUserObservationsNew(req, res) {
     handleAPIQuery(res, async () => {
       // req.userId set by the authentication middleware
       const rst = await db.insertUserObservation(req.userId, data.species, data.latitude, data.longitude, data.observedAt);
+      return { success: rst };
+    });
+  });
+}
+
+// route to handle API requests for creating new challenges, requires authentication
+// expects JSON body with name, startDate, endDate, points (object with lc, nt, vu, en, cr)
+function handleApiCreateChallenge(req, res) {
+  parsePostJsonData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      // req.userId set by the authentication middleware
+      const rst = await db.insertChallenge(
+        data.name,
+        data.startDate,
+        data.endDate,
+        req.userId,
+        data.points
+      );
+      return { success: rst };
+    });
+  });
+}
+
+// route to handle API requests for inviting users to challenges, requires authentication
+// expects JSON body with challengeId and inviteeUsername
+function handleApiInviteUserToChallenge(req, res) {
+  parsePostJsonData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      // req.userId set by the authentication middleware
+      const rst = await db.inviteUserToChallenge(
+        data.challenge,
+        req.userId,
+        data.username // inviteeUsername
+      );
       return { success: rst };
     });
   });

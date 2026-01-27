@@ -63,8 +63,7 @@ A small amount of user can submit challenges, forming a championship.
 the goal is to spot as many species as possible within a time frame.
 */
 CREATE TABLE challenge (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
+  name TEXT NOT NULL PRIMARY KEY,
   start_date TIMESTAMP NOT NULL,
   end_date TIMESTAMP NOT NULL,
   -- additional rules about the point system used related to species spotted conservation status
@@ -72,15 +71,14 @@ CREATE TABLE challenge (
   nt_points DECIMAL(5, 2) DEFAULT 2, -- near threatened
   vu_points DECIMAL(5, 2) DEFAULT 5, -- vulnerable
   en_points DECIMAL(5, 2) DEFAULT 6, -- endangered
-  cr_points DECIMAL(5, 2) DEFAULT 8,  -- critically endangered
-  UNIQUE(name)
+  cr_points DECIMAL(5, 2) DEFAULT 8  -- critically endangered
 );
 
 -- association table between challenge and users many-to-many relationship
 CREATE TABLE challenge_participants (
-  challenge_id UUID REFERENCES challenge(id),
+  challenge_name TEXT REFERENCES challenge(name),
   user_id UUID REFERENCES users(id),
-  PRIMARY KEY (challenge_id, user_id)
+  PRIMARY KEY (challenge_name, user_id)
 );
 
 /* table Observations storing birdwatching observations made by users. */
