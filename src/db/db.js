@@ -19,7 +19,8 @@ module.exports = {
   insertUserObservation,
   insertChallenge,
   addUserToChallenge,
-  inviteUserToChallenge
+  inviteUserToChallenge,
+  getUserChallengesWithParticipants,
 };
 
 // get species range as GeoJSON features array, filtered by scientific name (or common name) and season
@@ -288,8 +289,9 @@ async function checkUserIsParticipantInChallenge(challengeName, userId) {
   }
 }
 
-/* get all challenges where the given user is a participant, and the challenge is active */
-async function getUserActiveChallenges(userId) {
+
+/* get all challenges where the given user is a participant */
+async function getUserChallenges(userId) {
   if (!userId) {
     console.error('userId parameter is required');
     return [];
@@ -297,30 +299,107 @@ async function getUserActiveChallenges(userId) {
   const sql = `
     SELECT c.*
     FROM challenge c
-    JOIN challenge_participants cp ON c.id = cp.challenge_id
-    WHERE LOWER(cp.user_id) = $1 AND c.end_date > NOW() AND c.start_date <= NOW()
+    JOIN challenge_participants cp ON c.name = cp.challenge_name
+    WHERE cp.user_id = $1
   `;
-  const result = await pool.query(sql, [userId.toLowerCase()]);
-  return result.rows;
+  try {
+    const result = await pool.query(sql, [userId]);
+    return result.rows.map(row => ({
+      challengeName: row.name,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      ended: new Date() > new Date(row.end_date),
+      lcPoints: row.lc_points,
+      ntPoints: row.nt_points,
+      vuPoints: row.vu_points,
+      enPoints: row.en_points,
+      crPoints: row.cr_points,
+    }));
+  } catch (error) {
+    console.error('Error getting user challenges:', error);
+    return [];
+  }
+}
+
+/* 
+  get challenge participants and their scores as a a list of JSON object:
+  [
+    username: {
+      username,
+      score,
+      lcScore,
+      ntScore,
+      vuScore,
+      enScore,
+      crScore
+    }
+]
+*/
+async function getChallengeParticipantsScores(challengeName) {
+  if (!challengeName) {
+    console.error('challengeName parameter is required');
+    return [];
+  }
+  const sql = `
+    SELECT *
+    FROM user_challenge_points
+    WHERE challenge_name = $1
+  `;
+
+  try {
+    const result = await pool.query(sql, [challengeName]);
+    const participants = result.rows.map(row => ({
+      username: row.username,
+      score: parseFloat(row.total_points),
+      lcScore: parseFloat(row.lc_score),
+      ntScore: parseFloat(row.nt_score),
+      vuScore: parseFloat(row.vu_score),
+      enScore: parseFloat(row.en_score),
+      crScore: parseFloat(row.cr_score),
+    }));
+    return participants;
+  } catch (error) {
+    console.error('Error getting challenge participants scores:', error);
+    return [];
+  }
 }
 
 /*
-TODO
-  get all the information about a specific challenge as a JSON object including:
+  get all challenges where the given user is a participant
+  including all the information about a specific challenge and its participants as a list of JSON object including:
   {
-    id: // challenge.id,
-    start_date,
-    end_date,
-    lc_points,
-    nt_points,
-    vu_points,
-    en_points,
-    cr_points,
-    participants: {
+    challengeName,
+    startDate,
+    endDate,
+    ended,
+    lcPoints,
+    ntPoints,
+    vuPoints,
+    enPoints,
+    crPoints,
+    participants: [
       username: {
         username,
         score,
+        lcScore,
+        ntScore,
+        vuScore,
+        enScore,
+        crScore
       }
-    }
+    ]
   }
 */
+async function getUserChallengesWithParticipants(userId) {
+  if (!userId) {
+    console.error('userId parameter is required');
+    return [];
+  }
+
+  const challenges = await getUserChallenges(userId);
+  for (const challenge of challenges) {
+    const participants = await getChallengeParticipantsScores(challenge.challengeName);
+    challenge.participants = participants;
+  }
+  return challenges;
+}

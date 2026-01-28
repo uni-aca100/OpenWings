@@ -14,7 +14,8 @@ const protectedRoutes = [
   `/api/user/observations/new`,
   `/api/user`,
   `/api/user/challenges/new`,
-  `/api/user/challenges/invite`
+  `/api/user/challenges/invite`,
+  `/api/user/challenges`,
 ];
 
 const server = http.createServer(async (req, res) => {
@@ -73,6 +74,9 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'POST' && url === '/api/user/challenges/invite') {
     // Route to handle API requests for inviting users to challenges
     handleApiInviteUserToChallenge(req, res);
+  } else if (method === 'POST' && url === '/api/user/challenges') {
+    // Route to handle API requests for user challenges
+    handleApiUserChallenges(req, res);
   } else if (method === 'POST' && url === '/api/user') {
     // Route to handle API requests for user information
     handleApiUser(req, res);
@@ -247,6 +251,14 @@ function handleApiUserObservationsNew(req, res) {
       const rst = await db.insertUserObservation(req.userId, data.species, data.latitude, data.longitude, data.observedAt);
       return { success: rst };
     });
+  });
+}
+
+// route to handle API requests for user challenges, requires authentication
+function handleApiUserChallenges(req, res) {
+  // req.userId set by the authentication middleware
+  handleAPIQuery(res, async () => {
+    return await db.getUserChallengesWithParticipants(req.userId);
   });
 }
 
