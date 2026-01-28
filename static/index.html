@@ -62,46 +62,48 @@
           </dl>
         </div>
       </div>
-      <div class="grid bird-body-wrap">
+      <div class="grid bird-body-wrap" id="js-bird-body-wrap">
         <div class="bird-img1">
-          <img src="static/611-400x400-blur_2-grayscale.jpg" alt="Bird 1">
+          <img class="bird-img" src="static/images/611-400x400-blur_2-grayscale.jpg" alt="Bird 1">
         </div>
         <div class="bird-img2">
-          <img src="static/611-400x400-blur_2-grayscale.jpg" alt="Bird 2">
+          <img class="bird-img" src="static/images/611-400x400-blur_2-grayscale.jpg" alt="Bird 2">
         </div>
         <div class="bird-img3">
-          <img src="static/611-400x400-blur_2-grayscale.jpg" alt="Bird 3">
+          <img class="bird-img" src="static/images/611-400x400-blur_2-grayscale.jpg" alt="Bird 3">
         </div>
         <div class="bird-img4">
-          <img src="static/611-400x400-blur_2-grayscale.jpg" alt="Bird 4">
+          <img class="bird-img" src="static/images/611-400x400-blur_2-grayscale.jpg" alt="Bird 4">
         </div>
         <div class="bird-map-wrapper">
           <div id="map" class="bird-map"></div>
 
           <!-- season select button -->
           <div id="js-season-select" class="season-select" role="toolbar" aria-label="Select season">
-            <button class="season-btn" type="button" data-season="nonbreeding" aria-label="Resident">
-              <img src="/static/icons/resident.svg" class="season-icon" alt="" aria-hidden="true">
+            <button class="season-btn" type="button" data-season="nonbreeding" aria-label="Resident" title="resident">
+              <img src="static/images/resident.png" class="season-icon" alt="resident" aria-hidden="true">
               <span class="sr-only">Resident</span>
             </button>
-            <button class="season-btn" type="button" data-season="breeding" aria-label="Breeding">
-              <img src="/static/icons/breeding.svg" class="season-icon" alt="" aria-hidden="true">
+            <button class="season-btn" type="button" data-season="breeding" aria-label="Breeding" title="breeding">
+              <img src="static/images/breeding.png" class="season-icon" alt="breeding" aria-hidden="true">
               <span class="sr-only">Breeding</span>
             </button>
             <button class="season-btn" type="button" data-season="postbreeding_migration"
-              aria-label="Post-breeding Migration">
-              <img src="/static/icons/nonbreeding.svg" class="season-icon" alt="" aria-hidden="true">
+              aria-label="Post-breeding Migration" title="postbreeding migration">
+              <img src="static/images/postbreeding_migration.png" class="season-icon" alt="postbreeding migration"
+                aria-hidden="true">
               <span class="sr-only">Post-breeding Migration</span>
             </button>
             <button class="season-btn" type="button" data-season="prebreeding_migration"
-              aria-label="Rebreeding Migration">
-              <img src="/static/icons/migration.svg" class="season-icon" alt="" aria-hidden="true">
+              aria-label="Rebreeding Migration" title="prebreeding migration">
+              <img src="static/images/prebreeding_migration.png" class="season-icon" alt="prebreeding migration"
+                aria-hidden="true">
               <span class="sr-only">Rebreeding Migration</span>
             </button>
 
           </div>
         </div>
-
+      </div>
     </main>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"

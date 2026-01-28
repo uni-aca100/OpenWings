@@ -12,7 +12,6 @@ const pool = new Pool({
 module.exports = {
   query: (sql, params) => pool.query(sql, params),
   queryGeoJSONSpecies,
-  querySpeciesMedia,
   querySpecies,
   getUserObservations,
   getUserById,
@@ -21,6 +20,7 @@ module.exports = {
   addUserToChallenge,
   inviteUserToChallenge,
   getUserChallengesWithParticipants,
+  getSpeciesImages
 };
 
 // get species range as GeoJSON features array, filtered by scientific name (or common name) and season
@@ -46,30 +46,6 @@ async function queryGeoJSONSpecies(scientificName, season) {
       season: row.season,
     },
     geometry: JSON.parse(row.geojson),
-  }));
-}
-
-// get media information related to a species as a JSON array
-async function querySpeciesMedia(speciesId) {
-  if (!speciesId) {
-    console.error('speciesId parameter is required');
-    return [];
-  }
-
-  const sql = `
-    SELECT url, media_type, license, contributor
-    FROM media
-    WHERE LOWER(species_scientific_name) LIKE $1
-  `;
-  const result = await pool.query(sql, [`%${speciesId.toLowerCase()}%`]);
-  // convert to json array
-  return result.rows.map(row => ({
-    // generate a complete URL for the media,
-    // hardcode the base URL (in production, use environment variable)
-    media_url: `localhost:3000/${row.url}`,
-    media_type: row.media_type,
-    license: row.license,
-    contributor: row.contributor,
   }));
 }
 
@@ -402,4 +378,31 @@ async function getUserChallengesWithParticipants(userId) {
     challenge.participants = participants;
   }
   return challenges;
+}
+
+// get only the image (with license and contributor) for the given species scientific name or common name
+async function getSpeciesImages(speciesName) {
+  if (!speciesName) {
+    console.error('speciesName parameter is required');
+    return [];
+  }
+
+  const sql = `
+    SELECT url
+    FROM media
+    JOIN species s ON media.species_scientific_name = s.scientific_name
+    WHERE (s.scientific_name = $1 OR s.common_name = $1) AND media.media_type = 'image'
+  `;
+
+  try {
+    const result = await pool.query(sql, [speciesName]);
+    return result.rows.map(row => ({
+      url: row.url,
+      license: row.license,
+      contributor: row.contributor,
+    }));
+  } catch (error) {
+    console.error('Error getting bird images:', error);
+    return [];
+  }
 }

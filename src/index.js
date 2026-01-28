@@ -56,12 +56,12 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'POST' && url === '/api/species/info') {
     // Route to handle API requests for species information
     handleAPISpecies(req, res);
+  } else if (method === 'POST' && url === '/api/species/images') {
+    // Route to handle API requests for species images
+    handleAPISpeciesImages(req, res);
   } else if (method === 'POST' && url === '/api/species/geojson') {
     // Route to handle API requests for species GeoJSON data
     handleAPISpeciesGeoJSON(req, res);
-  } else if (method === 'POST' && url === '/api/species/media') {
-    // Route to handle API requests for species media data
-    handleAPISpeciesMedia(req, res);
   } else if (method === 'POST' && url === '/api/user/observations') {
     // Route to handle API requests for user observations
     handleApiUserObservations(req, res);
@@ -203,11 +203,11 @@ function handleAPISpeciesGeoJSON(req, res) {
 }
 
 // route to handle API requests for species media data
-function handleAPISpeciesMedia(req, res) {
+function handleAPISpeciesImages(req, res) {
   // get the species from the POST data and query the database
   parsePostJsonData(res, req, (data) => {
     handleAPIQuery(res, async () => {
-      return await db.querySpeciesMedia(data.speciesName);
+      return await db.getSpeciesImages(data.speciesName);
     });
   });
 }

@@ -1,5 +1,5 @@
 /* leaflet setup */
-const map = L.map('map').setView([51.505, -0.09], 4);
+const map = L.map('map').setView([46.868, 7.888], 4);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -87,17 +87,51 @@ const speciesInfoHandler = {
   }
 };
 
+const birdImgHandler = {
+  /* fetch and update the bird images */
+  fetchAndUpdateBirdImages(speciesName) {
+    // fetch and update the bird images
+    fetch(`/api/species/images`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ speciesName }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (!data || data.length === 0) {
+          console.log('No images found for species:', speciesName);
+        }
+        this.insertImages(data); // it will insert the default image if data is empty
+      });
+  },
+
+  // data is an array of image information { URL, license, contributor }
+  // insert the images into the image elements present in the HTML
+  insertImages(data) {
+    const wrapper = document.getElementById('js-bird-body-wrap');
+    const imgElements = wrapper.querySelectorAll('.bird-img');
+    imgElements.forEach((imgElement, index) => {
+      if (imgElement) {
+        imgElement.src = data[index]?.url ?? 'static/images/611-400x400-blur_2-grayscale.jpg'; // default image if not enough images
+      }
+    });
+  }
+};
+
 // wrapper for handling the entire bird species information view
 const birdSpeciesViewHandler = {
   /* update the entire view based on selected species and season */
   updateViewData(speciesName, season) {
     speciesMapHandler.fetchAndUpdateGeoJsonData(speciesName, season);
     speciesInfoHandler.fetchAndUpdateSpeciesInfo(speciesName);
+    birdImgHandler.fetchAndUpdateBirdImages(speciesName);
   },
 };
 
 /* --- init page data section ---*/
-birdSpeciesViewHandler.updateViewData('anas acuta', 'breeding');
+birdSpeciesViewHandler.updateViewData('Coracias garrulus', 'breeding');
 
 /* --- event listeners section ---*/
 // on search button click find the species and update the view

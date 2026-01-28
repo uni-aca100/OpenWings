@@ -149,4 +149,20 @@ GROUP BY
 -- Sample data for species table
 INSERT INTO species (scientific_name, common_name, family, order_name, diet, conservation_status) VALUES
 ('Anas acuta', 'Northern Pintail', 'Anatidae', 'Anseriformes', 'Herbivore', 'Least Concern');
+INSERT INTO species (scientific_name, common_name, family, order_name, diet, conservation_status) VALUES
+('Erithacus rubecula', 'European Robin', 'Muscicapidae', 'Passeriformes', 'Omnivore', 'Least Concern');
+INSERT INTO species (scientific_name, common_name, family, order_name, diet, conservation_status) VALUES
+('Streptopelia turtur', 'European Turtle Dove', 'Columbidae', 'Columbiformes', 'Granivore', 'Vulnerable');
+INSERT INTO species (scientific_name, common_name, family, order_name, diet, conservation_status) VALUES
+('Coracias garrulus', 'European Roller', 'Coraciidae', 'Coraciiformes', 'Carnivore', 'Near Threatened');
 
+-- Sample data for media table
+INSERT INTO media (species_scientific_name, media_type, url, license, contributor) VALUES
+('Anas acuta', 'image', 'static/images/northern_pintail_1.jpg', 'CC BY-SA 4.0', 'pmnh.org'),
+('Anas acuta', 'image', 'static/images/northern_pintail_2.jpg', 'CC BY-SA 4.0', 'flickr.com'),
+('Anas acuta', 'image', 'static/images/northern_pintail_3.jpg', 'CC BY-SA 4.0', 'carolinabirdclub.org'),
+('Anas acuta', 'image', 'static/images/northern_pintail_4.jpg', 'CC BY-SA 4.0', 'flickr.com'),
+('Coracias garrulus', 'image', 'static/images/european_roller_1.jpg', 'CC BY-SA 4.0', 'flickr.com'),
+('Coracias garrulus', 'image', 'static/images/european_roller_2.jpg', 'CC BY-SA 4.0', 'flickr.com'),
+('Coracias garrulus', 'image', 'static/images/european_roller_3.jpg', 'CC BY-SA 4.0', 'flickr.com'),
+('Coracias garrulus', 'image', 'static/images/european_roller_4.jpg', 'CC BY-SA 4.0', 'flickr.com');

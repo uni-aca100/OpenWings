@@ -256,6 +256,7 @@ body {
 
 .bird-body-wrap {
   padding: var(--space-md);
+  gap: var(--space-xs);
 }
 
 /* bird-info card */
@@ -366,6 +367,7 @@ body {
   color: var(--color-text);
   background: transparent;
   outline: none;
+  flex-grow: 1;
 }
 
 .search-input::placeholder {
@@ -430,7 +432,7 @@ body {
   justify-content: center;
   gap: var(--space-md);
   height: 48px;
-  border-radius: 12px;
+  border-radius: 2px;
   border: 1px solid transparent;
   background: var(--color-surface);
   color: var(--color-text);
@@ -442,8 +444,8 @@ body {
 
 /* icons */
 .season-icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   display: block;
 }
 
@@ -483,7 +485,6 @@ body {
 .season-btn:focus {
   outline: none;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
-  border-radius: 12px;
 }
 
 .season-btn:focus-visible {
