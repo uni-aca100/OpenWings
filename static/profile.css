@@ -143,8 +143,17 @@ body {
   text-decoration: none;
 }
 
+.icon-wrapper {
+  border-radius: 100%;
+}
+
+.icon-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14);
+}
+
 .icon-link i {
-  font-size: var(--font-xxl);
+  font-size: var(--font-xl);
 }
 
 .wrap-content {

@@ -16,7 +16,10 @@
   <header class="navbar">
     <div class="container flex items-center justify-between">
       <div class="brand"><a href="/" class="brand-link">Open Wings</a></div>
-      <div><a href="/profile" class="icon-link"><i class="fa-solid fa-circle-user"></i></a></div>
+      <div class="nav-links flex">
+        <div><button id="js-list-species-btn" class="btn btn-txt">Explore</button></div>
+        <div class="icon-wrapper"><a href="/profile" class="icon-link"><i class="fa-solid fa-circle-user"></i></a></div>
+      </div>
     </div>
   </header>
 
@@ -106,9 +109,83 @@
       </div>
     </main>
   </div>
+
+  <!-- modal for listing (and selecting the species to search for) all the available species in the db -->
+  <dialog id="js-list-species-modal" class="modal">
+    <form method="dialog" class="modal-content">
+      <button class="modal-close-btn" aria-label="Close" type="button">&times;</button>
+      <h2 class="modal-title">List of Species</h2>
+
+      <div class="form-group">
+        <label for="js-species-select">please select a species</label>
+        <select id="js-species-select" class="form-control" name="species-select">
+          <!-- dynamically populated -->
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="/static/entry.js"></script>
+  <script>
+    const listSpeciesBtn = document.getElementById('js-list-species-btn');
+    const listSpeciesModal = document.getElementById('js-list-species-modal');
+    const speciesSelect = document.getElementById('js-species-select');
+    const listSpeciesForm = listSpeciesModal.querySelector('form');
+    const listSpeciesCloseBtn = listSpeciesModal.querySelector('.modal-close-btn');
+
+    // fetch an initial batch of species from the server and populate the select element
+    function fetchSpecies() {
+      fetch('/api/species/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ limit: 50 }) // fetch up to 50 species
+      }).then(response => response.json())
+        .then(data => {
+          data?.forEach(species => {
+            const option = document.createElement('option');
+            option.value = species.scientificName;
+            option.textContent = `${species.commonName} (${species.scientificName})`;
+            speciesSelect.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching species list:', error);
+        });
+    }
+
+    listSpeciesBtn.addEventListener('click', () => {
+      listSpeciesModal.showModal();
+      fetchSpecies(); // fetch species when the modal is opened
+    });
+
+    listSpeciesModal.addEventListener('close', (e) => {
+      speciesSelect.innerHTML = ''; // clear the select element
+    });
+
+    listSpeciesCloseBtn.addEventListener('click', () => {
+      listSpeciesModal.close();
+    });
+
+    listSpeciesForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const selectedSpecies = speciesSelect.value;
+      if (selectedSpecies) {
+        // set the search input value and trigger the search
+        document.getElementById('js-search-input').value = selectedSpecies;
+        document.getElementById('js-search-btn').click();
+        listSpeciesModal.close();
+      }
+    });
+  </script>
+
 </body>
 
 </html>

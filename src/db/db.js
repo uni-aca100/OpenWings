@@ -20,7 +20,8 @@ module.exports = {
   addUserToChallenge,
   inviteUserToChallenge,
   getUserChallengesWithParticipants,
-  getSpeciesImages
+  getSpeciesImages,
+  getSpeciesBatch
 };
 
 // get species range as GeoJSON features array, filtered by scientific name (or common name) and season
@@ -403,6 +404,52 @@ async function getSpeciesImages(speciesName) {
     }));
   } catch (error) {
     console.error('Error getting bird images:', error);
+    return [];
+  }
+}
+
+
+// get species information in chunks for pagination
+// speciesNameOffset is the scientific name of the last species in the previous chunk
+// if speciesNameOffset is not provided, start from the beginning
+async function getSpeciesBatch(limit, speciesNameOffset = '') {
+  if (limit === null) {
+    console.error('limit parameter is required');
+    return [];
+  }
+  let sql;
+  let params = [];
+
+  if (speciesNameOffset === '') {
+    sql = `
+      SELECT *
+      FROM species
+      ORDER BY scientific_name
+      LIMIT $1
+    `;
+    params = [limit];
+  } else {
+    sql = `
+      SELECT *
+      FROM species
+      ORDER BY scientific_name
+      WHERE LOWER(scientific_name) > $1 LIMIT $2
+    `;
+    params = [speciesNameOffset.toLowerCase(), limit];
+  }
+
+  try {
+    const result = await pool.query(sql, params);
+    return result.rows.map(row => ({
+      scientificName: row.scientific_name,
+      commonName: row.common_name,
+      family: row.family,
+      orderName: row.order_name,
+      diet: row.diet,
+      conservationStatus: row.conservation_status,
+    }));
+  } catch (error) {
+    console.error('Error fetching species chunk:', error);
     return [];
   }
 }

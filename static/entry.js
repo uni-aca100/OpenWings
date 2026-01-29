@@ -1,5 +1,5 @@
 /* leaflet setup */
-const map = L.map('map').setView([46.868, 7.888], 4);
+const map = L.map('map').setView([48, 20.00], 4);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'

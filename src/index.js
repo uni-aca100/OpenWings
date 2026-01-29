@@ -56,6 +56,9 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'POST' && url === '/api/species/info') {
     // Route to handle API requests for species information
     handleAPISpecies(req, res);
+  } else if (method === 'POST' && url === '/api/species/batch') {
+    // Route to handle API requests for species information in batches
+    handleAPISpeciesBatch(req, res);
   } else if (method === 'POST' && url === '/api/species/images') {
     // Route to handle API requests for species images
     handleAPISpeciesImages(req, res);
@@ -259,6 +262,16 @@ function handleApiUserChallenges(req, res) {
   // req.userId set by the authentication middleware
   handleAPIQuery(res, async () => {
     return await db.getUserChallengesWithParticipants(req.userId);
+  });
+}
+
+// route to handle API requests for batch species data
+function handleAPISpeciesBatch(req, res) {
+  // get the limit and speciesNameOffset from the POST data and query the database
+  parsePostJsonData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      return await db.getSpeciesBatch(data.limit, data.speciesNameOffset || '');
+    });
   });
 }
 
