@@ -48,11 +48,15 @@
 
       <div class="standings-wrapper" id="js-standings-wrapper">
         <!-- challenge standings will be dynamically loaded here -->
-        <div class="standings-ongoing-wrapper" id="js-standings-ongoing-wrapper">
+        <div>
           <h2>Ongoing Challenges</h2>
+          <div class="standings-ongoing-wrapper" id="js-standings-ongoing-wrapper">
+          </div>
         </div>
-        <div class="standings-ended-wrapper" id="js-standings-ended-wrapper">
+        <div>
           <h2>Ended Challenges</h2>
+          <div class="standings-ended-wrapper" id="js-standings-ended-wrapper">
+          </div>
         </div>
       </div>
     </main>
@@ -159,45 +163,51 @@
 
     <!-- challenge standings template -->
     <template id="js-challenge-standings-template">
-      <div class="challenge-standings">
-        <h2 class="challenge-name"></h2>
-        <div class="standings-participants-wrapper">
-          <!-- participant standings will be dynamically loaded here -->
-        </div>
-        <!-- info about the challenge -->
-        <div class="challenge-info">
-          <p><em>Start Date:</em> <span class="challenge-start-date"></span></p>
-          <p><em>End Date:</em> <span class="challenge-end-date"></span></p>
-        </div>
-      </div>
+      <article class="challenge-card" role="group" aria-labelledby="">
+        <header class="challenge-header">
+          <h3 class="challenge-name"></h3>
+          <div class="challenge-meta">
+            <!-- info about the challenge -->
+            <time class="challenge-start-date" aria-label="Start date"></time>
+            <span class="meta-separator">—</span>
+            <time class="challenge-end-date" aria-label="End date"></time>
+          </div>
+        </header>
+
+        <section class="standings-participants" aria-label="Participants standings">
+          <div class="standings-participants-wrapper">
+            <table class="participant-standings" role="table" aria-label="Participant standings">
+              <thead>
+                <tr>
+                  <th scope="col" class="col-s col-th-user">User</th>
+                  <th scope="col" class="col-s">Total</th>
+                  <th scope="col" class="col-s" title="Least Concern">LC</th>
+                  <th scope="col" class="col-s" title="Near Threatened">NT</th>
+                  <th scope="col" class="col-s" title="Vulnerable">VU</th>
+                  <th scope="col" class="col-s" title="Endangered">EN</th>
+                  <th scope="col" class="col-s" title="Critically Endangered">CR</th>
+                </tr>
+              </thead>
+              <tbody class="standings-body">
+                <!-- participant standings will be dynamically loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </article>
     </template>
 
     <!-- participant standings template -->
     <template id="js-participant-standings-template">
-      <table class="participant-standings">
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Total Score</th>
-            <th><abbr title="Least Concern Score"> LC S.</abbr></th>
-            <th><abbr title="Near Threatened Score"> NT S.</abbr></th>
-            <th><abbr title="Vulnerable Score"> VU S.</abbr></th>
-            <th><abbr title="Endangered Score"> EN S.</abbr></th>
-            <th><abbr title="Critically Endangered Score"> CR S.</abbr></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="participant-username"></td>
-            <td class="participant-total-score"></td>
-            <td class="participant-lc-score"></td>
-            <td class="participant-nt-score"></td>
-            <td class="participant-vu-score"></td>
-            <td class="participant-en-score"></td>
-            <td class="participant-cr-score"></td>
-          </tr>
-        </tbody>
-      </table>
+      <tr class="participant-row">
+        <td class="participant-username col-s" data-label="User"></td>
+        <td class="participant-total-score col-s" data-label="Total"></td>
+        <td class="participant-lc-score col-s" data-label="LC"></td>
+        <td class="participant-nt-score col-s" data-label="NT"></td>
+        <td class="participant-vu-score col-s" data-label="VU"></td>
+        <td class="participant-en-score col-s" data-label="EN"></td>
+        <td class="participant-cr-score col-s" data-label="CR"></td>
+      </tr>
     </template>
 
 
@@ -285,6 +295,8 @@
           });
           const ongoing = document.getElementById('js-standings-ongoing-wrapper');
           const ended = document.getElementById('js-standings-ended-wrapper');
+          ongoing.innerHTML = ''; // clear previous content
+          ended.innerHTML = ''; // clear previous content
           this.insertChallengeStandingsToElement(data.filter(challenge => !challenge.ended), ongoing);
           this.insertChallengeStandingsToElement(data.filter(challenge => challenge.ended), ended);
         },
@@ -299,7 +311,8 @@
             challengeClone.querySelector('.challenge-name').textContent = challenge.challengeName;
             challengeClone.querySelector('.challenge-start-date').textContent = new Date(challenge.startDate).toLocaleDateString();
             challengeClone.querySelector('.challenge-end-date').textContent = new Date(challenge.endDate).toLocaleDateString();
-            const participantsWrapper = challengeClone.querySelector('.standings-participants-wrapper');
+            const participantsWrapper = challengeClone.querySelector('.standings-body');
+
             challenge.participants.forEach(participant => {
               const participantClone = participantTemplate.content.cloneNode(true);
               participantClone.querySelector('.participant-username').textContent = participant.username;
@@ -310,8 +323,10 @@
               participantClone.querySelector('.participant-en-score').textContent = participant.enScore;
               participantClone.querySelector('.participant-cr-score').textContent = participant.crScore;
               participantsWrapper.appendChild(participantClone);
-              standingsWrapper.appendChild(challengeClone);
             });
+
+            // append the challenge card after all participants are added
+            standingsWrapper.appendChild(challengeClone);
           });
 
         }

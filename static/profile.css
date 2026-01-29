@@ -416,6 +416,122 @@ body {
   box-shadow: none;
 }
 
+/* Challenge standings — table styling */
+.standings-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin: var(--space-md);
+}
+
+/* a single challenge as a card */
+.challenge-card {
+  background: linear-gradient(180deg, var(--color-surface), rgba(255, 255, 255, 0.98));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.04);
+  padding: calc(var(--space-md) - 0.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  overflow: hidden;
+}
+
+/* header layout: title + small meta */
+.challenge-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 0 var(--space-sm);
+}
+
+.challenge-name {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.challenge-meta {
+  color: var(--color-muted);
+  font-size: var(--font-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* participants container, allow horizontal scroll if needed */
+.standings-participants {
+  padding: 0.25rem var(--space-sm) var(--space-sm);
+  overflow-x: auto;
+}
+
+.standings-participants-wrapper {
+  overflow-x: auto;
+}
+
+.participant-standings {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 420px;
+  /* allow responsive horizontal scroll on small screens */
+  background: transparent;
+}
+
+.participant-standings thead th {
+  text-align: center;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--color-secondary);
+  padding: var(--space-sm) var(--space-xs);
+  border-bottom: 1px dashed var(--color-border);
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+  z-index: 1;
+}
+
+.col-th-user {
+  min-width: 4rem;
+}
+
+.participant-standings tbody td {
+  padding: var(--space-sm) var(--space-xs);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+  color: var(--color-text);
+  vertical-align: middle;
+  font-size: var(--font-sm);
+}
+
+.col-s {
+  text-align: center;
+  color: var(--color-text);
+}
+
+/* zebra rows for readability */
+.participant-standings tbody tr:nth-child(odd) {
+  background: linear-gradient(180deg, rgba(16, 24, 40, 0.04), rgba(16, 24, 40, 0.01));
+}
+
+.participant-username {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.standings-wrapper:empty,
+.standings-ongoing-wrapper:empty,
+.standings-ended-wrapper:empty {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+@media (max-width: 1080px) {
+  .standings-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 @media (max-width: 900px) {
   .profile-info .map-wrapper {
@@ -459,4 +575,22 @@ body {
     font-size: var(--font-md);
   }
 
+  .challenge-card {
+    padding: var(--space-xs);
+  }
+
+  .participant-standings {
+    min-width: 0;
+    width: 100%;
+    border: 0;
+  }
+
+  .participant-standings tbody td {
+    padding: 0.4rem 0.25rem;
+  }
+}
+
+.standings-ongoing-wrapper>.challenge-card,
+.standings-ended-wrapper>.challenge-card {
+  margin-bottom: var(--space-sm);
 }
