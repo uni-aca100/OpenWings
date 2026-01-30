@@ -46,7 +46,7 @@ CREATE TABLE species_range (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   species_scientific_name TEXT REFERENCES species(scientific_name),
   season TEXT, -- breeding, nonbreeding, year-round, 
-  geom GEOMETRY(MULTIPOLYGON, 4326) -- GeoJSON format
+  geom GEOMETRY(MULTIPOLYGON, 4326)
 );
 
 -- table media, storing media related to bird species
