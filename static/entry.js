@@ -130,6 +130,65 @@ const birdSpeciesViewHandler = {
   },
 };
 
+// handle the explore species modal and its functionality
+function handleExplore() {
+  // the modal elements, and hooks to its components to insert data and handle events
+  const listSpeciesBtn = document.getElementById('js-list-species-btn');
+  const listSpeciesModal = document.getElementById('js-list-species-modal');
+  const speciesSelect = document.getElementById('js-species-select');
+  const listSpeciesForm = listSpeciesModal.querySelector('form');
+  const listSpeciesCloseBtn = listSpeciesModal.querySelector('.modal-close-btn');
+
+  // fetch an initial batch of species from the server and populate the select element
+  // of the form inside the modal when the modal is opened
+  function fetchSpecies() {
+    fetch('/api/species/batch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ limit: 50 }) // fetch up to 50 species
+    }).then(response => response.json())
+      .then(data => {
+        data?.forEach(species => {
+          // create an option element for each species and append it to the select element
+          const option = document.createElement('option');
+          option.value = species.scientificName;
+          option.textContent = `${species.commonName} (${species.scientificName})`;
+          speciesSelect.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching species list:', error);
+      });
+  }
+
+  listSpeciesBtn.addEventListener('click', () => {
+    listSpeciesModal.showModal();
+    fetchSpecies(); // fetch species when the modal is opened
+  });
+
+  listSpeciesModal.addEventListener('close', (e) => {
+    speciesSelect.innerHTML = ''; // clear the select element
+  });
+
+  listSpeciesCloseBtn.addEventListener('click', () => {
+    listSpeciesModal.close();
+  });
+
+  listSpeciesForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const selectedSpecies = speciesSelect.value;
+    if (selectedSpecies) {
+      // set the search input value and trigger the search
+      // using the existing search form mechanism
+      document.getElementById('js-search-input').value = selectedSpecies;
+      document.getElementById('js-search-btn').click();
+      listSpeciesModal.close();
+    }
+  });
+}
+
 /* --- init page data section ---*/
 birdSpeciesViewHandler.updateViewData('Coracias garrulus', 'breeding');
 
@@ -149,3 +208,6 @@ document.getElementById('js-season-select').addEventListener('click', (e) => {
     speciesMapHandler.fetchAndUpdateSeasonGeoJsonData(season);
   }
 });
+
+// handle the explore species modal
+handleExplore();

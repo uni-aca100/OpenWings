@@ -12,6 +12,7 @@
 </head>
 
 <body>
+  <!-- navigation bar, only with a brand link and logout icon -->
   <header class="navbar">
     <div class="container flex items-center justify-between">
       <div class="brand"><a href="/" class="brand-link">Open Wings</a></div>
@@ -47,15 +48,17 @@
       </div>
 
       <div class="standings-wrapper" id="js-standings-wrapper">
-        <!-- challenge standings will be dynamically loaded here -->
+        <!-- challenge standings will be dynamically loaded in the two wrappers below -->
         <div>
           <h2>Ongoing Challenges</h2>
           <div class="standings-ongoing-wrapper" id="js-standings-ongoing-wrapper">
+            <!-- ongoing challenges will be dynamically loaded here -->
           </div>
         </div>
         <div>
           <h2>Ended Challenges</h2>
           <div class="standings-ended-wrapper" id="js-standings-ended-wrapper">
+            <!-- ended challenges will be dynamically loaded here -->
           </div>
         </div>
       </div>
@@ -163,6 +166,7 @@
 
     <!-- challenge standings template -->
     <template id="js-challenge-standings-template">
+      <!-- challenge card containing the challenge information -->
       <article class="challenge-card" role="group" aria-labelledby="">
         <header class="challenge-header">
           <h3 class="challenge-name"></h3>
@@ -189,7 +193,7 @@
                 </tr>
               </thead>
               <tbody class="standings-body">
-                <!-- participant standings will be dynamically loaded here -->
+                <!-- participant standings will be dynamically loaded here as rows -->
               </tbody>
             </table>
           </div>
@@ -199,6 +203,7 @@
 
     <!-- participant standings template -->
     <template id="js-participant-standings-template">
+      <!-- row for each participant, and their scores -->
       <tr class="participant-row">
         <td class="participant-username col-s" data-label="User"></td>
         <td class="participant-total-score col-s" data-label="Total"></td>
@@ -214,273 +219,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    <script>
-      /* leaflet setup */
-      const map = L.map('map').setView([51.505, -0.09], 4);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(map);
-
-      // Fetch GeoJSON data about observation points and update the map
-      const observationPointsHandler = {
-        lastLayer: null,
-
-        fetchAndUpdateGeoJSON() {
-          fetch('/api/user/observations', {
-            method: 'POST'
-          })
-            .then(response => response.json())
-            .then(data => {
-              if (!data || data.error) {
-                console.log('Invalid GeoJSON data received');
-                return;
-              }
-
-              if (this.lastLayer) {
-                map.removeLayer(this.lastLayer);
-              }
-              this.lastLayer = L.geoJSON(data, {
-                onEachFeature: (feature, layer) => {
-                  layer.bindPopup(`<em>species:</em> ${feature.properties.speciesName} <br />
-                                   <em>approved:</em> ${feature.properties.approved} <br />
-                                   <em>observed at:</em> ${new Date(feature.properties.observedAt).toLocaleDateString()}`);
-                }
-              });
-              this.lastLayer.addTo(map);
-            }).catch(error => {
-              console.error('Error fetching observation points:', error);
-            });
-        }
-      };
-
-      // Fetch user information and update the profile display
-      const userInfoHandler = {
-        fetchAndUpdateUserInfo() {
-          fetch('/api/user', {
-            method: 'POST'
-          })
-            .then(response => response.json())
-            .then(data => {
-              document.getElementById('js-username').textContent = data.username;
-            });
-        },
-      };
-
-      const challengeListHandler = {
-        fetchAndUpdateChallengeList() {
-          fetch('/api/user/challenges', {
-            method: 'POST'
-          })
-            .then(response => response.json())
-            .then(data => {
-              console.log('Challenge data received:', data);
-              if (data && data.length > 0) {
-                console.log('Inserting challenge standings...');
-                this.insertChallengeStandings(data);
-              } else {
-                console.log('No challenges found for the user.');
-              }
-            }).catch(error => {
-              console.error('Error fetching challenge list:', error);
-            });
-        },
-
-        // handling the dynamic insertion of the challenge standings to the page
-        // splitting the ongoing and ended challenges
-        // and order the participants by total score descending
-        insertChallengeStandings(data) {
-          data.forEach(challenge => {
-            challenge.participants.sort((a, b) => b.score - a.score);
-          });
-          const ongoing = document.getElementById('js-standings-ongoing-wrapper');
-          const ended = document.getElementById('js-standings-ended-wrapper');
-          ongoing.innerHTML = ''; // clear previous content
-          ended.innerHTML = ''; // clear previous content
-          this.insertChallengeStandingsToElement(data.filter(challenge => !challenge.ended), ongoing);
-          this.insertChallengeStandingsToElement(data.filter(challenge => challenge.ended), ended);
-        },
-
-        // handling the dynamic insertion of the challenge standings to the given wrapper element
-        insertChallengeStandingsToElement(data, standingsWrapper) {
-          const challengeTemplate = document.getElementById('js-challenge-standings-template');
-          const participantTemplate = document.getElementById('js-participant-standings-template');
-
-          data.forEach(challenge => {
-            const challengeClone = challengeTemplate.content.cloneNode(true);
-            challengeClone.querySelector('.challenge-name').textContent = challenge.challengeName;
-            challengeClone.querySelector('.challenge-start-date').textContent = new Date(challenge.startDate).toLocaleDateString();
-            challengeClone.querySelector('.challenge-end-date').textContent = new Date(challenge.endDate).toLocaleDateString();
-            const participantsWrapper = challengeClone.querySelector('.standings-body');
-
-            challenge.participants.forEach(participant => {
-              const participantClone = participantTemplate.content.cloneNode(true);
-              participantClone.querySelector('.participant-username').textContent = participant.username;
-              participantClone.querySelector('.participant-total-score').textContent = participant.score;
-              participantClone.querySelector('.participant-lc-score').textContent = participant.lcScore;
-              participantClone.querySelector('.participant-nt-score').textContent = participant.ntScore;
-              participantClone.querySelector('.participant-vu-score').textContent = participant.vuScore;
-              participantClone.querySelector('.participant-en-score').textContent = participant.enScore;
-              participantClone.querySelector('.participant-cr-score').textContent = participant.crScore;
-              participantsWrapper.appendChild(participantClone);
-            });
-
-            // append the challenge card after all participants are added
-            standingsWrapper.appendChild(challengeClone);
-          });
-
-        }
-      };
-
-      // Initialize the profile page information
-      observationPointsHandler.fetchAndUpdateGeoJSON();
-      userInfoHandler.fetchAndUpdateUserInfo();
-      challengeListHandler.fetchAndUpdateChallengeList();
-
-      // Modal handling for inserting new observation
-      const insertObservationBtn = document.getElementById('js-insert-observation');
-      const insertObservationModal = document.getElementById('js-insert-observation-modal');
-      const modalCloseBtn = insertObservationModal.querySelector('.modal-close-btn');
-      const observationForm = insertObservationModal.querySelector('form');
-
-      insertObservationBtn.addEventListener('click', () => {
-        insertObservationModal.showModal();
-      });
-
-      modalCloseBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        insertObservationModal.close();
-      });
-
-      observationForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-
-        const formData = new FormData(observationForm);
-        const observationData = {
-          species: formData.get('species'),
-          latitude: parseFloat(formData.get('latitude')),
-          longitude: parseFloat(formData.get('longitude')),
-          observedAt: new Date(formData.get('observedAt')).toISOString()
-        };
-
-        fetch('/api/user/observations/new', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(observationData)
-        })
-          .then(response => response.json())
-          .then(data => {
-            // Refresh the observation points on the map
-            observationPointsHandler.fetchAndUpdateGeoJSON();
-            // Close the modal
-            insertObservationModal.close();
-          })
-          .catch(error => {
-            console.error('Error submitting observation:', error);
-          });
-      });
-
-      // Modal handling for creating new challenge
-      const createChallengeBtn = document.getElementById('js-create-challenge');
-      const createChallengeModal = document.getElementById('js-create-challenge-modal');
-      const challengeModalCloseBtn = createChallengeModal.querySelector('.modal-close-btn');
-      const challengeForm = createChallengeModal.querySelector('form');
-
-      createChallengeBtn.addEventListener('click', () => {
-        createChallengeModal.showModal();
-      });
-
-      challengeModalCloseBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        createChallengeModal.close();
-      });
-
-      challengeForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-
-        const formData = new FormData(challengeForm);
-        const challengeData = {
-          name: formData.get('name'),
-          startDate: new Date(formData.get('startDate')).toISOString(),
-          endDate: new Date(formData.get('endDate')).toISOString(),
-          points: {
-            lc: parseFloat(formData.get('lcPoints')),
-            nt: parseFloat(formData.get('ntPoints')),
-            vu: parseFloat(formData.get('vuPoints')),
-            en: parseFloat(formData.get('enPoints')),
-            cr: parseFloat(formData.get('crPoints'))
-          }
-        };
-
-        if (challengeData.startDate >= challengeData.endDate || Date.now() >= challengeData.endDate || Date.now() >= challengeData.startDate) {
-          alert('Invalid date range for the challenge.');
-          return;
-        }
-
-        fetch('/api/user/challenges/new', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(challengeData)
-        })
-          .then(response => response.json())
-          .then(data => {
-            // Refresh the challenge list
-            challengeListHandler.fetchAndUpdateChallengeList();
-            // Close the modal
-            createChallengeModal.close();
-          })
-          .catch(error => {
-            console.error('Error submitting challenge:', error);
-          });
-      });
-
-      // Modal handling for inviting user to a challenge
-      const inviteUserBtn = document.getElementById('js-invite-user');
-      const inviteUserModal = document.getElementById('js-invite-user-modal');
-      const inviteModalCloseBtn = inviteUserModal.querySelector('.modal-close-btn');
-      const inviteForm = inviteUserModal.querySelector('form');
-
-      inviteUserBtn.addEventListener('click', () => {
-        inviteUserModal.showModal();
-      });
-
-      inviteModalCloseBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        inviteUserModal.close();
-      });
-
-      inviteForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-
-        const formData = new FormData(inviteForm);
-        const inviteData = {
-          challenge: formData.get('challenge'),
-          username: formData.get('username')
-        };
-
-        fetch('/api/user/challenges/invite', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(inviteData)
-        })
-          .then(response => response.json())
-          .then(data => {
-            // Handle successful invitation
-            console.log('User invited successfully:', data);
-            inviteUserModal.close();
-          })
-          .catch(error => {
-            console.error('Error inviting user:', error);
-          });
-      });
-
-    </script>
+    <script src="static/profile.js"></script>
 </body>
 
 </html>

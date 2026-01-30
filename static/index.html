@@ -44,6 +44,7 @@
           </form>
 
         </div>
+        <!-- bird meta information -->
         <div class="bird-meta-wrapper">
           <dl class="bird-meta" aria-labelledby="js-common-name">
             <div class="bird-meta-group">
@@ -65,6 +66,8 @@
           </dl>
         </div>
       </div>
+
+      <!-- bird images and map -->
       <div class="grid bird-body-wrap" id="js-bird-body-wrap">
         <div class="bird-img1">
           <img class="bird-img" src="static/images/611-400x400-blur_2-grayscale.jpg" alt="Bird 1">
@@ -83,9 +86,10 @@
 
           <!-- season select button -->
           <div id="js-season-select" class="season-select" role="toolbar" aria-label="Select season">
-            <button class="season-btn" type="button" data-season="nonbreeding" aria-label="Resident" title="resident">
-              <img src="static/images/resident.png" class="season-icon" alt="resident" aria-hidden="true">
-              <span class="sr-only">Resident</span>
+            <button class="season-btn" type="button" data-season="nonbreeding" aria-label="nonbreeding"
+              title="nonbreeding">
+              <img src="static/images/resident.png" class="season-icon" alt="nonbreeding" aria-hidden="true">
+              <span class="sr-only">nonbreeding</span>
             </button>
             <button class="season-btn" type="button" data-season="breeding" aria-label="Breeding" title="breeding">
               <img src="static/images/breeding.png" class="season-icon" alt="breeding" aria-hidden="true">
@@ -132,59 +136,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="/static/entry.js"></script>
-  <script>
-    const listSpeciesBtn = document.getElementById('js-list-species-btn');
-    const listSpeciesModal = document.getElementById('js-list-species-modal');
-    const speciesSelect = document.getElementById('js-species-select');
-    const listSpeciesForm = listSpeciesModal.querySelector('form');
-    const listSpeciesCloseBtn = listSpeciesModal.querySelector('.modal-close-btn');
-
-    // fetch an initial batch of species from the server and populate the select element
-    function fetchSpecies() {
-      fetch('/api/species/batch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ limit: 50 }) // fetch up to 50 species
-      }).then(response => response.json())
-        .then(data => {
-          data?.forEach(species => {
-            const option = document.createElement('option');
-            option.value = species.scientificName;
-            option.textContent = `${species.commonName} (${species.scientificName})`;
-            speciesSelect.appendChild(option);
-          });
-        })
-        .catch(error => {
-          console.error('Error fetching species list:', error);
-        });
-    }
-
-    listSpeciesBtn.addEventListener('click', () => {
-      listSpeciesModal.showModal();
-      fetchSpecies(); // fetch species when the modal is opened
-    });
-
-    listSpeciesModal.addEventListener('close', (e) => {
-      speciesSelect.innerHTML = ''; // clear the select element
-    });
-
-    listSpeciesCloseBtn.addEventListener('click', () => {
-      listSpeciesModal.close();
-    });
-
-    listSpeciesForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const selectedSpecies = speciesSelect.value;
-      if (selectedSpecies) {
-        // set the search input value and trigger the search
-        document.getElementById('js-search-input').value = selectedSpecies;
-        document.getElementById('js-search-btn').click();
-        listSpeciesModal.close();
-      }
-    });
-  </script>
 
 </body>
 
