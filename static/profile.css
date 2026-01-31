@@ -526,6 +526,17 @@ body {
   font-style: italic;
 }
 
+.invitation-message {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: var(--space-md);
+}
+
+.invitation-message h3 {
+  margin: 0;
+}
+
 @media (max-width: 1080px) {
   .standings-wrapper {
     grid-template-columns: 1fr;

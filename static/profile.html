@@ -43,6 +43,8 @@
             <button id="js-create-challenge" class="btn btn-primary btn-actions">Create Challenge</button>
             <!-- button open invite user to a challenge modal -->
             <button id="js-invite-user" class="btn btn-primary btn-actions">Invite User</button>
+            <!-- button open view challenge invitations modal -->
+            <button id="js-view-invitations" class="btn btn-primary btn-actions">View Invitations</button>
           </div>
         </div>
       </div>
@@ -163,6 +165,38 @@
         </div>
       </form>
     </dialog>
+
+    <!-- modal for viewing challenge invitations -->
+    <dialog id="js-view-invitations-modal" class="modal">
+      <form method="dialog" class="modal-content">
+        <button class="modal-close-btn" aria-label="Close" type="button">&times;</button>
+        <h2 class="modal-title">Challenge Invitations</h2>
+
+        <div class="invitations-list" id="js-invitations-list">
+          <!-- challenge invitations will be dynamically loaded here -->
+        </div>
+      </form>
+    </dialog>
+
+    <!-- invitation template -->
+    <template id="js-invitation-template">
+      <article class="invitation-card form-group">
+        <div class="invitation-message">
+          <h3 class="invitation-challenge-name"></h3>
+          <div class="invitation-challenge-meta">
+            <!-- info about the challenge -->
+            <time class="invitation-challenge-start-date" aria-label="Start date"></time>
+            <span class="meta-separator">—</span>
+            <time class="invitation-challenge-end-date" aria-label="End date"></time>
+          </div>
+        </div>
+        <div class="invitation-actions">
+          <!-- the data-challenge-name attribute should be set to the challenge name to identify the challenge -->
+          <button class="btn btn-primary btn-invitation-accept" type="button" data-challenge-name="">Accept</button>
+          <button class="btn btn-secondary btn-invitation-decline" type="button" data-challenge-name="">Decline</button>
+        </div>
+      </article>
+    </template>
 
     <!-- challenge standings template -->
     <template id="js-challenge-standings-template">

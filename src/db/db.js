@@ -17,7 +17,8 @@ module.exports = {
   getUserById,
   insertUserObservation,
   insertChallenge,
-  addUserToChallenge,
+  updateChallengeInvitation,
+  getChallengeInvitations,
   inviteUserToChallenge,
   getUserChallengesWithParticipants,
   getSpeciesImages,
@@ -185,7 +186,7 @@ async function insertChallenge(name, startDate, endDate, userId, points) {
     let success = false;
     if (rst.rowCount > 0) {
       // Add the user as a participant in the challenge
-      success = await addUserToChallenge(name, userId);
+      success = await addUserToChallengeAsParticipant(name, userId);
     }
     return success;
   } catch (error) {
@@ -194,15 +195,16 @@ async function insertChallenge(name, startDate, endDate, userId, points) {
   }
 }
 
-// add a user as participant to a challenge by challenge name
-async function addUserToChallenge(challengeName, userId) {
+// add a user as participant to a challenge by challenge name as accepted
+// this is an utility function used when creating a challenge
+async function addUserToChallengeAsParticipant(challengeName, userId) {
   if (!challengeName || !userId) {
     console.error('Both challengeName and userId parameters are required');
     return false;
   }
   const sql = `
-    INSERT INTO challenge_participants (challenge_name, user_id)
-    VALUES ($1, $2)
+    INSERT INTO challenge_participants (challenge_name, user_id, status)
+    VALUES ($1, $2, 'accepted')
   `;
   try {
     const rst = await pool.query(sql, [challengeName, userId]);
@@ -234,8 +236,8 @@ async function inviteUserToChallenge(challengeName, userId, inviteeUsername) {
   }
 
   const sql = `
-    INSERT INTO challenge_participants (challenge_name, user_id)
-    VALUES ($1, $2)
+    INSERT INTO challenge_participants (challenge_name, user_id, status)
+    VALUES ($1, $2, 'pending')
   `;
   try {
     const rst = await pool.query(sql, [challengeName, inviteeId]);
@@ -247,6 +249,7 @@ async function inviteUserToChallenge(challengeName, userId, inviteeUsername) {
 }
 
 // check if a user is participant in a challenge
+// the user is considered participant only if the status is 'accepted'
 async function checkUserIsParticipantInChallenge(challengeName, userId) {
   if (!challengeName || !userId) {
     console.error('Both challengeName and userId parameters are required');
@@ -255,7 +258,7 @@ async function checkUserIsParticipantInChallenge(challengeName, userId) {
   const sql = `
     SELECT 1
     FROM challenge_participants
-    WHERE challenge_name = $1 AND user_id = $2
+    WHERE challenge_name = $1 AND user_id = $2 AND status = 'accepted'
   `;
   try {
     const result = await pool.query(sql, [challengeName, userId]);
@@ -266,8 +269,75 @@ async function checkUserIsParticipantInChallenge(challengeName, userId) {
   }
 }
 
+// update challenge invitation response (accept or reject) by challengeName, userId,
+// and response (true for accept, false for reject)
+// only pending invitations can be updated, return true if the update was successful
+async function updateChallengeInvitation(challengeName, userId, response) {
+  if (!challengeName || !userId || response === undefined) {
+    console.error('All parameters are required');
+    return false;
+  }
+  const sql = `
+    UPDATE challenge_participants
+    SET status = $3
+    WHERE challenge_name = $1 AND user_id = $2 AND status = 'pending'
+  `;
+  try {
+    const rst = await pool.query(sql, [challengeName, userId, response ? 'accepted' : 'rejected']);
+    return rst.rowCount > 0;
+  } catch (error) {
+    console.error('Error accepting challenge invitation:', error);
+    return false;
+  }
+}
 
-/* get all challenges where the given user is a participant */
+// get all challenge invitations for a given user
+// return a JSON object including:
+// {
+//   challengeName,
+//   startDate,
+//   endDate
+// }
+async function getChallengeInvitations(userId) {
+  if (!userId) {
+    console.error('userId parameter is required');
+    return [];
+  }
+  const sql = `
+    SELECT c.*
+    FROM challenge c
+    JOIN challenge_participants cp ON c.name = cp.challenge_name
+    WHERE cp.user_id = $1 AND cp.status = 'pending'
+  `;
+  try {
+    const result = await pool.query(sql, [userId]);
+    return result.rows.map(row => ({
+      challengeName: row.name,
+      startDate: row.start_date,
+      endDate: row.end_date,
+    }));
+  } catch (error) {
+    console.error('Error getting challenge invitations:', error);
+    return [];
+  }
+}
+
+/*
+  get all challenges where the given user is a participant
+  the user is considered participant only if the status is 'accepted'
+  including all the information about a specific challenge as a list of JSON object including:
+  {
+    challengeName,
+    startDate,
+    endDate,
+    ended,
+    lcPoints,
+    ntPoints,
+    vuPoints,
+    enPoints,
+    crPoints
+  }
+*/
 async function getUserChallenges(userId) {
   if (!userId) {
     console.error('userId parameter is required');
@@ -277,7 +347,7 @@ async function getUserChallenges(userId) {
     SELECT c.*
     FROM challenge c
     JOIN challenge_participants cp ON c.name = cp.challenge_name
-    WHERE cp.user_id = $1
+    WHERE cp.user_id = $1 AND cp.status = 'accepted'
   `;
   try {
     const result = await pool.query(sql, [userId]);

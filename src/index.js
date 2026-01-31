@@ -15,6 +15,8 @@ const protectedRoutes = [
   `/api/user`,
   `/api/user/challenges/new`,
   `/api/user/challenges/invite`,
+  `/api/user/challenges/invite/respond`,
+  `/api/user/challenges/invitations`,
   `/api/user/challenges`,
 ];
 
@@ -77,6 +79,12 @@ const server = http.createServer(async (req, res) => {
   } else if (method === 'POST' && url === '/api/user/challenges/invite') {
     // Route to handle API requests for inviting users to challenges
     handleApiInviteUserToChallenge(req, res);
+  } else if (method === 'POST' && url === '/api/user/challenges/invite/respond') {
+    // Route to handle API requests for responding to challenge invitations
+    handleApiRespondToChallengeInvite(req, res);
+  } else if (method === 'POST' && url === '/api/user/challenges/invitations') {
+    // Route to handle API requests for user challenge invitations
+    handleApiUserChallengeInvitations(req, res);
   } else if (method === 'POST' && url === '/api/user/challenges') {
     // Route to handle API requests for user challenges
     handleApiUserChallenges(req, res);
@@ -262,6 +270,31 @@ function handleApiUserChallenges(req, res) {
   // req.userId set by the authentication middleware
   handleAPIQuery(res, async () => {
     return await db.getUserChallengesWithParticipants(req.userId);
+  });
+}
+
+// route to handle API requests for responding to challenge invitations, requires authentication
+// expects JSON body with challengeName and bool response (true for accept, false for decline)
+function handleApiRespondToChallengeInvite(req, res) {
+  parsePostJsonData(res, req, (data) => {
+    handleAPIQuery(res, async () => {
+      // req.userId set by the authentication middleware
+      const rst = await db.updateChallengeInvitation(
+        data.challengeName,
+        req.userId,
+        data.response // true for 'accepted', false for 'declined'
+      );
+      return { success: rst };
+    });
+  });
+}
+
+// route to handle API requests for user challenge invitations, requires authentication
+// send back all challenge invitations for the authenticated user as a JSON array
+function handleApiUserChallengeInvitations(req, res) {
+  // req.userId set by the authentication middleware
+  handleAPIQuery(res, async () => {
+    return await db.getChallengeInvitations(req.userId);
   });
 }
 

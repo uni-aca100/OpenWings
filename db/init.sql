@@ -80,6 +80,8 @@ CREATE TABLE challenge (
 CREATE TABLE challenge_participants (
   challenge_name TEXT REFERENCES challenge(name),
   user_id UUID REFERENCES users(id),
+  -- status of the participation by the user, pending means waiting for the approval from the user
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
   PRIMARY KEY (challenge_name, user_id)
 );
 

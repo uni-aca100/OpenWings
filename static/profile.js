@@ -278,3 +278,92 @@ inviteForm.addEventListener('submit', (event) => {
       console.error('Error inviting user:', error);
     });
 });
+
+// Modal handling for viewing challenge invitations
+const viewInvitationsBtn = document.getElementById('js-view-invitations');
+const viewInvitationsModal = document.getElementById('js-view-invitations-modal');
+const invitationsModalCloseBtn = viewInvitationsModal.querySelector('.modal-close-btn');
+const invitationsWrapper = viewInvitationsModal.querySelector('#js-invitations-list');
+
+// handle accept/decline invitation button clicks sending the response to the server
+// accepting or declining an invitation will refresh the invitations list
+invitationsWrapper.addEventListener('click', (event) => {
+  const target = event.target;
+  if (target.classList.contains('btn-invitation-accept')) {
+    // accept invitation button clicked
+    const challengeName = target.getAttribute('data-challenge');
+    respondToInvitation(challengeName, true);
+  } else if (target.classList.contains('btn-invitation-decline')) {
+    // decline invitation button clicked
+    const challengeName = target.getAttribute('data-challenge');
+    respondToInvitation(challengeName, false);
+  }
+});
+
+// function to fetch and display challenge invitations in the modal
+// called when opening the invitations modal
+function fetchAndDisplayInvitations() {
+  // fetch and display challenge invitations when opening the modal
+  fetch('/api/user/challenges/invitations', {
+    method: 'POST'
+  })
+    .then(response => response.json())
+    .then(data => {
+      // clear previous invitations
+      invitationsWrapper.innerHTML = '';
+      if (data && data.length > 0) {
+        data.forEach(invitation => {
+          const InvitationTemplate = document.getElementById('js-invitation-template');
+          const invitationDiv = InvitationTemplate.content.cloneNode(true);
+          invitationDiv.querySelector('.invitation-challenge-name').textContent = invitation.challengeName;
+          invitationDiv.querySelector('.invitation-challenge-start-date').textContent = new Date(invitation.startDate).toLocaleDateString();
+          invitationDiv.querySelector('.invitation-challenge-end-date').textContent = new Date(invitation.endDate).toLocaleDateString();
+          invitationDiv.querySelector('.btn-invitation-accept').setAttribute('data-challenge', invitation.challengeName);
+          invitationDiv.querySelector('.btn-invitation-decline').setAttribute('data-challenge', invitation.challengeName);
+          invitationsWrapper.appendChild(invitationDiv);
+        });
+      } else {
+        invitationsWrapper.innerHTML = '<p>No pending invitations.</p>';
+      }
+      viewInvitationsModal.showModal(); // open the modal to view invitations
+    })
+    .catch(error => {
+      console.error('Error fetching invitations:', error);
+    });
+}
+
+// open the modal to view challenge invitations
+// and insert the invitations fetched from the server
+viewInvitationsBtn.addEventListener('click', () => {
+  fetchAndDisplayInvitations();
+});
+
+// close the modal to view challenge invitations
+invitationsModalCloseBtn.addEventListener('click', (e) => {
+  // close the modal to view invitations
+  e.preventDefault();
+  viewInvitationsModal.close();
+});
+
+// function to respond to a challenge invitation, sending acceptance or decline to the server
+function respondToInvitation(challengeName, response) {
+  fetch('/api/user/challenges/invite/respond', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ challengeName, response })
+  })
+    .then(response => response.json())
+    .then(data => {
+      // refresh the invitations list after responding
+      fetchAndDisplayInvitations();
+      // refresh the challenge list in case of acceptance
+      if (response) {
+        challengeListHandler.fetchAndUpdateChallengeList();
+      }
+    })
+    .catch(error => {
+      console.error('Error responding to invitation:', error);
+    });
+}
