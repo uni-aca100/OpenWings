@@ -1,3 +1,15 @@
+
+
+## Birdwatching Platform
+
+Sistema di catalogazione ornitologica e citizen science con gestione di competizioni tra utenti.
+
+* **Catalogo Ornitologico**: Database pubblico delle specie con schede informative integrate e foto.
+* **Sistema di Avvistamento**: Inserimento dati geolocalizzati (coordinate, data) per attività di osservazione.
+* **Challenge Manager**: Creazione di competizioni a tempo con sistema di inviti diretti tra utenti.
+* **Ranking Engine**: Classifiche basate su metriche d'avvistamento, segregate per singola sfida e accessibili solo ai partecipanti.
+
+
 ## Getting Started
 
 ### Dependencies
