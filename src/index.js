@@ -7,6 +7,8 @@ const auth = require('./auth');
 const STATIC_ROOT = path.join(__dirname, '..', 'static');
 
 const PORT = 3000;
+
+// List of protected routes that require authentication.
 const protectedRoutes = [
   '/profile',
   `/profile/logout`,
@@ -20,12 +22,22 @@ const protectedRoutes = [
   `/api/user/challenges`,
 ];
 
+/*
+ Main server, handles the routing for the application.
+ For static file routes, it serves the files from the static directory
+ with proper content types.
+ For API routes, it parses JSON POST data and interacts with the database,
+ sending JSON responses.
+ For authentication routes (login, register, logout),
+ it handles user sessions with cookies
+ */
 const server = http.createServer(async (req, res) => {
   const { method, url } = req;
 
   // List of protected routes that require authentication
   if (protectedRoutes.includes(req.url)) {
-    // handle the authentication via a middleware that attaches userId to req if authenticated
+    // handle the authentication via a middleware that handle the request
+    // it attaches userId to req if authenticated
     if (!(await auth.middleAuthenticateRequest(req, res))) {
       return;
     }
@@ -34,6 +46,12 @@ const server = http.createServer(async (req, res) => {
   if (method === 'GET' && url === '/') {
     // Route to serve the homepage
     serveStaticFileFromPath(path.join(__dirname, '../static/index.html'), res);
+  } else if (method === 'GET' && url === '/sw.js') {
+    // Route to serve the service worker file
+    serveStaticFileFromPath(path.join(__dirname, '../static/sw.js'), res);
+  } else if (method === 'GET' && url === '/manifest.json') {
+    // Route to serve the web app manifest file
+    serveStaticFileFromPath(path.join(__dirname, '../static/manifest.json'), res);
   } else if (method === 'GET' && url === '/login') {
     // Route to serve the login page
     serveStaticFileFromPath(path.join(__dirname, '../static/login.html'), res);
@@ -92,15 +110,26 @@ const server = http.createServer(async (req, res) => {
     // Route to handle API requests for user information
     handleApiUser(req, res);
   } else {
+    // Route not found
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not Found' }));
   }
 });
 
+// Start the server, '0.0.0.0' means it will accept requests from any
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
+/*
+  Serve static files with directory traversal protection
+  the expected URL format is /static/<file_path> from parameter req.url
+  parameters:
+    req - the HTTP request object
+    res - the HTTP response object
+  returns:
+    serves the static file or 400 Bad Request if invalid path
+ */
 function serveStaticFile(req, res) {
   const safePath = checkStaticDirectoryTraversal(req.url);
   if (safePath === '') {
@@ -112,7 +141,14 @@ function serveStaticFile(req, res) {
   serveStaticFileFromPath(safePath, res);
 }
 
-// serve static files (CSS, JS, images, etc.)
+/*
+  serve static files (CSS, JS, images, etc.)
+  parameters:
+    filePath - the absolute path to the static file
+    res - the HTTP response object
+  returns:
+    serves the static file or 404 Not Found if file does not exist
+ */
 function serveStaticFileFromPath(filePath, res) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -134,8 +170,16 @@ function serveStaticFileFromPath(filePath, res) {
   });
 }
 
-// handle registration requests (POST /register)
-// expects JSON body with username and password
+/*
+  handle registration requests (POST /register)
+  expects JSON body with username and password
+  parameters:
+    req - the HTTP request object
+    res - the HTTP response object
+  returns:
+    on success, sends JSON response with redirectUrl to /login
+    on failure, sends JSON response with error message
+*/
 function handleRegistration(req, res) {
   parsePostJsonData(res, req, async (data) => {
     const success = await auth.createUser(data.username, data.password, data.email);
@@ -148,8 +192,16 @@ function handleRegistration(req, res) {
   });
 }
 
-// handle login requests (POST /login)
-// expects JSON body with username and password
+/*
+  handle login requests (POST /login)
+  expects JSON body with username and password
+  parameters:
+    req - the HTTP request object
+    res - the HTTP response object
+  returns:
+    on success, sets a session cookie and sends JSON response with redirectUrl to /profile
+    on failure, sends JSON response with error message
+*/
 function handleLogin(req, res) {
   parsePostJsonData(res, req, async (data) => {
     const sessionId = await auth.authenticateUser(data.username, data.password);
@@ -167,7 +219,16 @@ function handleLogin(req, res) {
   });
 }
 
-// handle logout requests (GET /profile/logout)
+
+/*
+  handle logout requests (GET /profile/logout)
+  parameters:
+    req - the HTTP request object
+    res - the HTTP response object
+  returns:
+    on success, invalidates the user session and redirects to /login
+    on failure, sends an HTML response with error message
+*/
 async function handleLogout(req, res) {
   const success = await auth.invalidateUserSession(req);
   if (success) {
@@ -181,8 +242,17 @@ async function handleLogout(req, res) {
   }
 }
 
-// handle POST data conversion to JSON (presume application/json content type)
-// the handleData callback is called with the parsed JSON data
+/*
+  handle POST data conversion to JSON (presume application/json content type)
+  the handleData callback is called with the parsed JSON data
+  parameters:
+    res - the HTTP response object, used to send error responses if JSON parsing fails
+    req - the HTTP request object, used to read the POST data
+    handleData - a callback function that is called with the parsed JSON data when parsing is successful
+  returns:
+    reads the POST data, parses it as JSON, and calls handleData with the parsed data
+    if parsing fails, sends a 500 Internal Server Error response with an error message
+ */
 function parsePostJsonData(res, req, handleData) {
   let body = '';
   req.on('data', chunk => {
@@ -342,7 +412,18 @@ function handleApiInviteUserToChallenge(req, res) {
   });
 }
 
-// generic function to handle API queries and send JSON responses
+/*
+  generic function to handle API interactions with the database and send JSON responses
+  parameters:
+    res - the HTTP response object, used to send JSON responses
+    asyncQueryJsonFn - an asynchronous function that performs the database operation and returns the data to be sent as JSON response
+
+  returns:
+    calls asyncQueryJsonFn to to perform the operation and get the data,
+    then sends a JSON response with status 200 if data is found (or successful operation),
+    or status 404 if the operation was unsuccessful (empty array or null),
+    or status 500 if there is a database error
+ */
 async function handleAPIQuery(res, asyncQueryJsonFn) {
   try {
     const data = await asyncQueryJsonFn();
@@ -350,11 +431,11 @@ async function handleAPIQuery(res, asyncQueryJsonFn) {
     if ((Array.isArray(data) && data.length > 0) || (data && !Array.isArray(data))) {
       sendJSONResponse(res, 200, data);
     } else {
-      sendJSONResponse(res, 404, { error: 'No data found' });
+      sendJSONResponse(res, 404, { error: 'Unsuccessful operation' });
     }
   } catch (err) {
-    console.error('Database query error:', err);
-    sendJSONResponse(res, 500, { error: 'Database query failed' });
+    console.error('Database operation error:', err);
+    sendJSONResponse(res, 500, { error: 'Database operation failed' });
   }
 }
 

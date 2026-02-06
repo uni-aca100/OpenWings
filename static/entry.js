@@ -211,3 +211,13 @@ document.getElementById('js-season-select').addEventListener('click', (e) => {
 
 // handle the explore species modal
 handleExplore();
+
+// register the service worker for offline caching
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+  });
+}

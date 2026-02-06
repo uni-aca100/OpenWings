@@ -29,9 +29,10 @@ module.exports = {
 async function queryGeoJSONSpecies(scientificName, season) {
   if (!scientificName || !season) {
     console.error('Both scientificName and season parameters are required');
-    return [];  // Return an empty array if parameters are missing
+    return [];
   }
 
+  // get the geometry as GeoJSON
   const sql = `
     SELECT ST_AsGeoJSON(geom) AS geojson, species_scientific_name, season
     FROM species_range
